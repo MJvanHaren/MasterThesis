@@ -4,3 +4,6 @@
 [submodule "MotionPlanning"]
 	path = MotionPlanning
 	url = git@github.com:MJvanHaren/MotionPlanning.git
+[submodule "H-bridge"]
+	path = H-bridge
+	url = git@github.com:MJvanHaren/H-bridge.git
