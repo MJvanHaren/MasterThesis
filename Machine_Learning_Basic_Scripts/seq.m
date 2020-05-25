@@ -39,7 +39,7 @@ for i=1:20
     F = randn;
   end
   plot(x,f,'bx','MarkerSize',32,'LineWidth',2)
-  plot([X X],[-2.5 2.5],'r-')
+   plot([X X],[-2.5 2.5],'r-')
   pause 
 
   plot(X,F,'rx','MarkerSize',32,'LineWidth',2)
