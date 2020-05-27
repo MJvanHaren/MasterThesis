@@ -21,16 +21,16 @@ function [minlogp,dlogpdtheta] = marLikelihood3hyp(xT,y,unk)
     L = chol(Ky,'lower');               % cholesky decomposition
     alphaA = L'\(L\y);                  % GP 4 ML algoritme (p.19)
     minlogp = ( 0.5*y'*alphaA...
-        +sum(diag(L))...
+        +(sum(log(diag(L))))...
         +N/2*log(2*pi));                % GP 4 ML algoritme (p.19)
 
-    %% derivatives of log likelhood w.r.t. hyper parameters
+    %% derivatives of log likelhood w.r.t. hyper parameters 
     sqDist = repmat(xT.^2,1,N) + repmat((xT.^2)',N,1) - 2*(xT)*xT';
     dKtheta1 = unk(3)^2*k*sqDist/unk(1)^3;                                   % https://bit.ly/2WR9e6i
     dKtheta2 = 2*unk(2)*eye(N);                                     % slightly different w.r.t. Gaussian process regresion techniques (3.13)
     dKtheta3 = 2*unk(3)*k;
-    dlogpdtheta(1) = -0.5*trace((alphaA*alphaA'-k)*dKtheta1);      % GP 4 ML (5.9)
-    dlogpdtheta(2) = -0.5*trace((alphaA*alphaA'-k)*dKtheta2);      % GP 4 ML (5.9)
-    dlogpdtheta(3) = -0.5*trace((alphaA*alphaA'-k)*dKtheta3);      % GP 4 ML (5.9)
+    dlogpdtheta(1) = -0.5*trace((alphaA*alphaA'-Ky)*dKtheta1);      % GP 4 ML (5.9)
+    dlogpdtheta(2) = -0.5*trace((alphaA*alphaA'-Ky)*dKtheta2);      % GP 4 ML (5.9)
+    dlogpdtheta(3) = -0.5*trace((alphaA*alphaA'-Ky)*dKtheta3);      % GP 4 ML (5.9)
 end
 
