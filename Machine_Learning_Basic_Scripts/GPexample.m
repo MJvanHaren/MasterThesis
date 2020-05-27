@@ -1,11 +1,11 @@
 close all; clear all;clc;
-randn('seed',3)
-rand('seed',4)
+% rng(randperm(100,1),'twister')
+rng('default');
 trueF = @(x) sin(0.9*x);
 
 
 n =500;                                     % number of test points
-N = 7;                                     % number of training points
+N = 10;                                     % number of training points
 
 s = 0.005;                                % noise variance on data
 dist = 10;
@@ -19,14 +19,14 @@ Xtest = linspace(-dist/2,dist/2,n)';               % test points
 p = 15;                      % period for per. kernel   
 lengthP =1;                  % periodic kernel only!
 x01 = linspace(0.1,7.5,50);
-x02 = logspace(-7,0,50);
-x03 = logspace(-1,1,50);
-% x03 = 1.5;
+x02 = logspace(-6,0,50);
+% x03 = logspace(-1,1,50);
+x03 = 1;
 [X01,X02,X03] = meshgrid(x01,x02,x03);
 
 x0 = [2;5e-3;1];
 ub = [100,1,100];         % lower and upper bounds for hyper parameters
-lb= [0.01 1e-7 0.01];
+lb= [0.05 1e-7 0.05];
 
 options = optimoptions('fmincon','Display','off',...
     'Algorithm','trust-region-reflective',...          % interior point does not work correctly with specifyobjectivegradient on
@@ -42,14 +42,16 @@ for i = 1:(size(X01,1))
     end
 end
 %%
+figure(6);clf;
 if (length(size(X01)))<3
     mini = (min(min(fval)));
     [I]=find(fval==mini);
     figure(6); clf;
-    fval(fval >= mini+5*abs(mini)) = NaN;
+    fval(fval >= mini+2*abs(mini)) = mini+2*abs(mini);
     surf(X01,X02,fval,'LineStyle','none');
-    xlabel('length para');
-    ylabel('noise stdv')
+    contourf(X01,X02,-fval);
+    xlabel('$l$','interpreter','Latex');
+    ylabel('$\sigma_n$','interpreter','Latex')
     set(gca,'yscale','log');
 %     set(gca,'xscale','log');
 else
