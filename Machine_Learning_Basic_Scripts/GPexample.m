@@ -20,8 +20,8 @@ p = 15;                      % period for per. kernel
 lengthP =1;                  % periodic kernel only!
 x01 = linspace(0.1,7.5,50);
 x02 = logspace(-6,0,50);
-% x03 = logspace(-1,1,50);
-x03 = 1;
+x03 = logspace(-1,1,50);
+% x03 = 1;
 [X01,X02,X03] = meshgrid(x01,x02,x03);
 
 x0 = [2;5e-3;1];
@@ -42,18 +42,16 @@ for i = 1:(size(X01,1))
     end
 end
 %%
-figure(6);clf;
 if (length(size(X01)))<3
+    figure(1);clf;
     mini = (min(min(fval)));
     [I]=find(fval==mini);
-    figure(6); clf;
     fval(fval >= mini+2*abs(mini)) = mini+2*abs(mini);
     surf(X01,X02,fval,'LineStyle','none');
     contourf(X01,X02,-fval);
     xlabel('$l$','interpreter','Latex');
     ylabel('$\sigma_n$','interpreter','Latex')
     set(gca,'yscale','log');
-%     set(gca,'xscale','log');
 else
     mini = min(min(min(fval)));
     [I]=find(fval==mini);
@@ -113,7 +111,7 @@ stdv0 = sqrt(s20);
 stdv2 = sqrt(s2p);
 
 %% mu, true function, samples and stdv plot
-figure(1);clf;
+figure(2);clf;
 subplot(1,3,1)
 plot(X,y,'+','MarkerSize',15); hold on;
 plot(Xtest,trueF(Xtest),'LineWidth',1.3);
@@ -160,7 +158,7 @@ ylabel('output, f(x)','interpreter','Latex');
 legend('Generated samples','True function','Mu of fitted posterior function','$\mu \pm 3 \sigma$','interpreter','Latex')
 
 %%
-figure(2);clf;
+figure(3);clf;
 plot(X,y,'+','MarkerSize',15); hold on;
 plot(Xtest,trueF(Xtest),'LineWidth',1.3);
 plot(Xtest,mup,'--','LineWidth',1.3);
@@ -179,16 +177,21 @@ Lss_prior = chol(k_ss+1e-9*eye(n),'lower');
 Lss_priorp = chol(k_ssp+1e-9*eye(n),'lower');
 f_prior = Lss_prior*randn(n,2);
 f_priorp = Lss_priorp*randn(n,2);
-figure(3)
+figure(4)
 plot(Xtest,f_prior);
 title('Two samples from prior with SE kernel')
 xlabel('x');
 ylabel('f(x)');
-figure(4)
+figure(5)
 plot(Xtest,f_priorp);
 title('Two samples from prior with periodic kernel')
 xlabel('x');
 ylabel('f(x)');
 %% posterior calcs and plots
 Lss_post = chol(k_ss + 1e-9*eye(n)-Lk'*Lk,'lower');
-f_post = mu+Lss_post*randn(n,N);
+f_post = mu+Lss_post*randn(n,2);
+figure(6);
+plot(Xtest,f_post);
+title('Two samples from posterior with SE kernel')
+xlabel('x');
+ylabel('f(x)');
