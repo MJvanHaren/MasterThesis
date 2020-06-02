@@ -1,11 +1,14 @@
 close all; clear all;clc;
 % rng(randperm(100,1),'twister')
 rng('default');
-trueF = @(x) sin(0.9*x);
+trueF = @(x) 15*sin(0.9*x)+3+x+0.1*x.^2;
+% trueF = @(x) sin(0.9*x)+3+x;
+% trueF = @(x) sin(0.9*x)+10;
+% trueF = @(x) x.^2;
 
 
 n =500;                                     % number of test points
-N = 10;                                     % number of training points
+N = 8;                                     % number of training points
 
 s = 0.005;                                % noise variance on data
 dist = 10;
@@ -13,31 +16,36 @@ dist = 10;
 X = (rand(N,1)-0.5)*dist;
 y = trueF(X) + s^2*randn(N,1);
 % y = trueF(X); % noiseless
-Xtest = linspace(-dist/2,dist/2,n)';               % test points
-%% hyper parameter optimization
+Xtest = linspace(-dist/0.4,dist/0.4,n)';               % test points
 
+% basis for mean functions
+h = @(x) [ones(length(x),1) x x.^2];
+mh = size(h(1),2);
+%% hyper parameter optimization
 p = 15;                      % period for per. kernel   
 lengthP =1;                  % periodic kernel only!
-x01 = linspace(0.1,7.5,50);
-x02 = logspace(-6,0,50);
-x03 = logspace(-1,1,50);
+x01 = linspace(0.1,7.5,10);
+x02 = logspace(-6,0,10);
+x03 = logspace(-1,1,10);
 % x03 = 1;
-[X01,X02,X03] = meshgrid(x01,x02,x03);
+x04 = linspace(1,3000,20);
+[X01,X02,X03,X04] = ndgrid(x01,x02,x03,x04);
 
-x0 = [2;5e-3;1];
-ub = [100,1,100];         % lower and upper bounds for hyper parameters
-lb= [0.05 1e-7 0.05];
+x0 = [2;5e-3;1;0];
+ub = [100,1,100,30];         % lower and upper bounds for hyper parameters
+lb= [0.05 1e-7 0.05,-30];
 
 options = optimoptions('fmincon','Display','off',...
-    'Algorithm','trust-region-reflective',...          % interior point does not work correctly with specifyobjectivegradient on
-    'SpecifyObjectiveGradient',true,...
+    'Algorithm','interior-point',...          % interior point does not work correctly with specifyobjectivegradient on
+    'SpecifyObjectiveGradient',false,...
     'CheckGradients',false,...
     'StepTolerance',1e-10);
 for i = 1:(size(X01,1))
     for j = 1:(size(X02,2))
         for ii = 1:size(X03,3)
-%             [xres{i,j,ii},fval(i,j,ii)] = fmincon(@(x) marLikelihood3hyp(X,y,x),[X01(i,j,ii); X02(i,j,ii); X03(i,j,ii)],[],[],[],[],lb,ub,[],options);
-              fval(i,j,ii) = marLikelihood3hyp(X,y,[X01(i,j,ii); X02(i,j,ii); X03(i,j,ii)]);
+            for jj = 1:size(X04,4)
+              fval(i,j,ii,jj) = marLikelihood4hyp(X,y,h,[X01(i,j,ii,jj); X02(i,j,ii,jj); X03(i,j,ii,jj); X04(i,j,ii,jj)]);
+            end
         end
     end
 end
@@ -52,13 +60,16 @@ if (length(size(X01)))<3
     xlabel('$l$','interpreter','Latex');
     ylabel('$\sigma_n$','interpreter','Latex')
     set(gca,'yscale','log');
-else
+elseif (length(size(X01)))==3
     mini = min(min(min(fval)));
+    [I]=find(fval==mini);
+else
+    mini = min(min(min(min(fval))));
     [I]=find(fval==mini);
 end
 
-xres0 = [X01(I); X02(I);X03(I)];
-[xres,~] = fmincon(@(x) marLikelihood3hyp(X,y,x),xres0,[],[],[],[],lb,ub,[],options);
+xres0 = [X01(I); X02(I);X03(I);X04(I)];
+[xres,~] = fmincon(@(x) marLikelihood4hyp(X,y,h,x),xres0,[],[],[],[],lb,ub,[],options);
 meanfunc = [];
 covfunc = @covSEiso;                        % Squared Exponental covariance function
 likfunc = @likGauss;                        % Gaussian likelihood
@@ -72,14 +83,15 @@ k0 = GPSEKernel(X,X,xres0(1));
 km = GPSEKernel(X,X,xresm(1));
 kp = PeriodicKernel(X,X,p,lengthP);
 
-L = chol(xres(3)^2*k+xres(2)^2*eye(N),'lower');         % cholesky of kernel matrix
+Ky = xres(3)^2*k+xres(2)^2*eye(N);
+L = chol(Ky,'lower');                                       % cholesky of kernel matrix
 Lm = chol(xresm(3)^2*km+xresm(2)^2*eye(N),'lower');         % cholesky of kernel matrix
 L0 = chol(xres0(3)^2*k0+xres0(2)^2*eye(N),'lower');         % cholesky of kernel matrix
 Lp = chol(kp+s^2*eye(N),'lower'); 
 
 
 
-% mean for the test points
+% cov for the test points
 k_s = xres(3)^2*GPSEKernel(X,Xtest,xres(1));
 k_sm = xresm(3)^2*GPSEKernel(X,Xtest,xresm(1));
 k_s0 = xres0(3)^2*GPSEKernel(X,Xtest,xres0(1));
@@ -90,13 +102,23 @@ Lkm = Lm \ k_sm;
 Lk0 = L0 \ k_s0;
 Lkp = Lp \ k_sp;
 
-mu = (Lk') * (L \ y);
+% mean function shit
+B = xres(4)^2*eye(mh);
+H = h(X)';
+betaBar = inv(H*inv(Ky)*H')*H*inv(Ky)*y;                        % small b = 0
+% betaBar = inv(inv(B)+H*inv(Ky)*H')*(H*inv(Ky)*y+inv(B)*b);    % any small b
+Hs = h(Xtest)';
+R = Hs-H*inv(Ky)*k_s;
+
+mu = (Lk') * (L \ y)+R'*betaBar;
 mum = (Lkm') * (Lm \ y);
 mu0 = (Lk0') * (L0 \ y);
 mup = (Lkp') * (Lp \ y);
 
-% SD
-k_ss = xres(3)^2*GPSEKernel(Xtest,Xtest,xres(1));   % kernel at test points
+% kernel star star
+k_ss = xres(3)^2*GPSEKernel(Xtest,Xtest,xres(1));
+k_ss = k_ss + R'*inv(H*inv(Ky)*H')*R;                % small b
+% k_ss = k_ss+R'*inv(inv(B)+H*inv(Ky)*H')*R;              % any b
 k_ssm = xresm(3)^2*GPSEKernel(Xtest,Xtest,xresm(1));   % kernel at test points
 k_ss0 = xres0(3)^2*GPSEKernel(Xtest,Xtest,xres0(1));   % kernel at test points
 k_ssp = PeriodicKernel(Xtest,Xtest,p,lengthP);
@@ -173,8 +195,8 @@ ylabel('output, f(x)','interpreter','Latex');
 legend('Generated samples','True function','Mu of fitted posterior function','$\mu \pm 3 \sigma$','interpreter','Latex')
 
 %% Prior calcs and plots
-Lss_prior = chol(k_ss+1e-9*eye(n),'lower');
-Lss_priorp = chol(k_ssp+1e-9*eye(n),'lower');
+Lss_prior = chol(k_ss+1e-7*eye(n),'lower');
+Lss_priorp = chol(k_ssp+1e-7*eye(n),'lower');
 f_prior = Lss_prior*randn(n,2);
 f_priorp = Lss_priorp*randn(n,2);
 figure(4)
@@ -188,7 +210,7 @@ title('Two samples from prior with periodic kernel')
 xlabel('x');
 ylabel('f(x)');
 %% posterior calcs and plots
-Lss_post = chol(k_ss + 1e-9*eye(n)-Lk'*Lk,'lower');
+Lss_post = chol(k_ss + 1e-7*eye(n)-Lk'*Lk,'lower');
 f_post = mu+Lss_post*randn(n,2);
 figure(6);
 plot(Xtest,f_post);

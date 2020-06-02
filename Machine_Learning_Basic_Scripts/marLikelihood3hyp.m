@@ -1,11 +1,11 @@
 function [minlogp,dlogpdtheta] = marLikelihood3hyp(xT,y,unk)
     % xT    = x data of training data y (N points)
     % y     = training data (N points)
-    % unk   = vector of unknown (hyper)parameters (3*1)
+    % h     = mean function
+    % unk   = vector of unknown (hyper)parameters (3*1) (L,sigman,sigmaf)
     %% definitions
     N = length(y);
     xT = reshape(xT, [],1);
-    
     %% kernel K
     k = GPSEKernel(xT,xT,unk(1));       % kernel with only length parameter
     Ky = unk(3)^2*k + unk(2)^2*eye(N);  % kernel with added noise hyperparameter
