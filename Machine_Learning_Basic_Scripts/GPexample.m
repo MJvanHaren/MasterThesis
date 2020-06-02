@@ -1,11 +1,12 @@
 close all; clear all;clc;
 % rng(randperm(100,1),'twister')
 rng('default');
-trueF = @(x) sin(0.9*x);
+trueF = @(x) sin(0.9*x)+10;
+% trueF = @(x) x.^2;
 
 
 n =500;                                     % number of test points
-N = 10;                                     % number of training points
+N = 8;                                     % number of training points
 
 s = 0.005;                                % noise variance on data
 dist = 10;
@@ -13,20 +14,24 @@ dist = 10;
 X = (rand(N,1)-0.5)*dist;
 y = trueF(X) + s^2*randn(N,1);
 % y = trueF(X); % noiseless
-Xtest = linspace(-dist/2,dist/2,n)';               % test points
+Xtest = linspace(-dist/0.7,dist/0.7,n)';               % test points
+
+% basis for mean functions
+h = @(x) [ones(length(x),1) x x.^2];
 %% hyper parameter optimization
 
 p = 15;                      % period for per. kernel   
 lengthP =1;                  % periodic kernel only!
-x01 = linspace(0.1,7.5,50);
-x02 = logspace(-6,0,50);
-x03 = logspace(-1,1,50);
+x01 = linspace(0.1,7.5,10);
+x02 = logspace(-6,0,10);
+x03 = logspace(-1,1,10);
 % x03 = 1;
-[X01,X02,X03] = meshgrid(x01,x02,x03);
+x04 = linspace(0,20,10);
+[X01,X02,X03,X04] = ndgrid(x01,x02,x03,x04);
 
-x0 = [2;5e-3;1];
-ub = [100,1,100];         % lower and upper bounds for hyper parameters
-lb= [0.05 1e-7 0.05];
+x0 = [2;5e-3;1;0];
+ub = [100,1,100,30];         % lower and upper bounds for hyper parameters
+lb= [0.05 1e-7 0.05,-30];
 
 options = optimoptions('fmincon','Display','off',...
     'Algorithm','trust-region-reflective',...          % interior point does not work correctly with specifyobjectivegradient on
@@ -36,8 +41,9 @@ options = optimoptions('fmincon','Display','off',...
 for i = 1:(size(X01,1))
     for j = 1:(size(X02,2))
         for ii = 1:size(X03,3)
-%             [xres{i,j,ii},fval(i,j,ii)] = fmincon(@(x) marLikelihood3hyp(X,y,x),[X01(i,j,ii); X02(i,j,ii); X03(i,j,ii)],[],[],[],[],lb,ub,[],options);
-              fval(i,j,ii) = marLikelihood3hyp(X,y,[X01(i,j,ii); X02(i,j,ii); X03(i,j,ii)]);
+            for jj = 1:size(X04,4)
+              fval(i,j,ii,jj) = marLikelihood4hyp(X,y,[X01(i,j,ii,jj); X02(i,j,ii,jj); X03(i,j,ii,jj); X04(i,j,ii,jj)]);
+            end
         end
     end
 end
@@ -52,13 +58,16 @@ if (length(size(X01)))<3
     xlabel('$l$','interpreter','Latex');
     ylabel('$\sigma_n$','interpreter','Latex')
     set(gca,'yscale','log');
-else
+elseif (length(size(X01)))==3
     mini = min(min(min(fval)));
+    [I]=find(fval==mini);
+else
+    mini = min(min(min(min(fval))));
     [I]=find(fval==mini);
 end
 
-xres0 = [X01(I); X02(I);X03(I)];
-[xres,~] = fmincon(@(x) marLikelihood3hyp(X,y,x),xres0,[],[],[],[],lb,ub,[],options);
+xres0 = [X01(I); X02(I);X03(I);X04(I)];
+[xres,~] = fmincon(@(x) marLikelihood4hyp(X,y,x),xres0,[],[],[],[],lb,ub,[],options);
 meanfunc = [];
 covfunc = @covSEiso;                        % Squared Exponental covariance function
 likfunc = @likGauss;                        % Gaussian likelihood
@@ -90,11 +99,10 @@ Lkm = Lm \ k_sm;
 Lk0 = L0 \ k_s0;
 Lkp = Lp \ k_sp;
 
-mu = (Lk') * (L \ y);
+mu = xres(4)+(Lk') * (L \ (y-xres(4)));
 mum = (Lkm') * (Lm \ y);
-mu0 = (Lk0') * (L0 \ y);
+mu0 = xres(4)+(Lk0') * (L0 \ (y-xres(4)));
 mup = (Lkp') * (Lp \ y);
-
 % SD
 k_ss = xres(3)^2*GPSEKernel(Xtest,Xtest,xres(1));   % kernel at test points
 k_ssm = xresm(3)^2*GPSEKernel(Xtest,Xtest,xresm(1));   % kernel at test points
