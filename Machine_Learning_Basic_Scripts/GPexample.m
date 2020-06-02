@@ -1,8 +1,9 @@
 close all; clear all;clc;
 % rng(randperm(100,1),'twister')
 rng('default');
-% trueF = @(x) sin(0.9*x)+3+x+0.1*x.^2;
-trueF = @(x) sin(0.9*x)+3+x;
+trueF = @(x) 15*sin(0.9*x)+3+x+0.1*x.^2;
+% trueF = @(x) sin(0.9*x)+3+x;
+% trueF = @(x) sin(0.9*x)+10;
 % trueF = @(x) x.^2;
 
 
@@ -21,7 +22,6 @@ Xtest = linspace(-dist/0.4,dist/0.4,n)';               % test points
 h = @(x) [ones(length(x),1) x x.^2];
 mh = size(h(1),2);
 %% hyper parameter optimization
-
 p = 15;                      % period for per. kernel   
 lengthP =1;                  % periodic kernel only!
 x01 = linspace(0.1,7.5,10);
