@@ -8,7 +8,8 @@ function [minlogp,dlogpdtheta] = marLikelihood4hyp(xT,y,h,unk)
     xT = reshape(xT, [],1);
     %% kernel K
     k = GPSEKernel(xT,xT,unk(1));       % kernel with only length parameter
-    Ky = unk(3)^2*k + unk(2)^2*eye(N);  % kernel with added noise hyperparameter
+%     Ky = unk(3)^2*k + unk(2)^2*eye(N);  % kernel with added noise hyperparameter
+    Ky = unk(3)*k + unk(2)*eye(N);  % kernel with added noise hyperparameter
     %% GP 4 ML (5.9)
     % invKy = inv(Ky);                  % GP 4 ML (5.9)
     % alpha =  invKy*y;                 % GP 4 ML (5.9)
@@ -24,7 +25,8 @@ function [minlogp,dlogpdtheta] = marLikelihood4hyp(xT,y,h,unk)
         +N/2*log(2*pi));                % GP 4 ML algoritme (p.19)
     H = h(xT)';
     mh  = size(H,1);
-    B = unk(4)^2*eye(mh);
+%     B = unk(4)^2*eye(mh);
+    B = unk(4)*eye(mh);
     
 %     b = reshape(unk(5:end),[],1);
 %     minlogp = (0.5*(H'*b-y)'*inv(Ky+H'*B*H)*(H'*b-y)...
