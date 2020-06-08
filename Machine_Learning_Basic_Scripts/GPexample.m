@@ -15,7 +15,7 @@ y = trueF(X) + s^2*randn(N,1);
 Xtest = linspace(-dist/0.5,dist/0.5,n)';               % test points
 
 % basis for mean functions
-h = @(x) [ones(length(x),1) x x.^2 ];
+h = @(x) [ones(length(x),1) x x.^2 x.^3];
 mh = size(h(1),2);
 %% hyper parameter optimization
 x01 = linspace(0.01,60,10);
@@ -66,9 +66,9 @@ xres0 = [X01(I); X02(I);X03(I);X04(I)];
 meanfunc = [];
 covfunc = @covSEiso;                        % Squared Exponental covariance function
 likfunc = @likGauss;                        % Gaussian likelihood
-hyp = struct('mean', [], 'cov', log([x0(1) x0(3)]), 'lik', log(x0(2)));
-hypUpdate = minimize(hyp,@gp, -1000,@infGaussLik, meanfunc, covfunc, likfunc, X, y);
-[mu2, var2] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, X, y, Xtest);
+hypUpdate = struct('mean', [], 'cov', log([x0(1) x0(3)]), 'lik', log(x0(2)));
+% hypUpdate = minimize(hyp,@gp, -1000,@infGaussLik, meanfunc, covfunc, likfunc, X, y);
+% [mu2, var2] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, X, y, Xtest);
 xresm = exp([hypUpdate.cov(1) hypUpdate.lik hypUpdate.cov(2)]);
 %% kernel function to our training data
 k = GPSEKernel(X,X,xres(1));
@@ -157,8 +157,8 @@ title('GPML minimize w/o mean func')
 xlabel('input, x','interpreter','Latex');
 ylabel('output, f(x)','interpreter','Latex');
 legend('Generated samples','True function','Mu of fitted posterior function','$\mu \pm 3 \sigma$','interpreter','Latex')
-% 
-% %% Prior calcs and plots
+
+%% Prior calcs and plots
 % Lss_prior = chol(k_ss+1e-7*eye(n),'lower');
 % f_prior = Lss_prior*randn(n,2);
 % figure(3)
@@ -166,7 +166,7 @@ legend('Generated samples','True function','Mu of fitted posterior function','$\
 % title('Two samples from prior with SE kernel')
 % xlabel('x');
 % ylabel('f(x)');
-% %% posterior calcs and plots
+%% posterior calcs and plots
 % Lss_post = chol(k_ss + 1e-7*eye(n)-Lk'*Lk,'lower');
 % f_post = mu+Lss_post*randn(n,2);
 % figure(4);
