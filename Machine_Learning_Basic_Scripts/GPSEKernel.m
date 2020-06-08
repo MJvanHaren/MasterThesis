@@ -9,6 +9,7 @@ function val = GPSEKernel(a,b,l)
 %     [d, m] = size(b);
 %     sqdist = repmat(a.^2,1,m) + repmat((b.^2)',n,1) - 2*a*b';
     sqdist = (repmat(a,size(b'))-repmat(b',size(a))).^2;
-    val = exp(-0.5/l^2*sqdist);
+%     val = exp(-0.5/l^2*sqdist);
+    val = exp(-0.5/l*sqdist);
 %     K(p,q) = exp(-0.5*(repmat(p',size(q))-repmat(q,size(p'))).^2)
 end
