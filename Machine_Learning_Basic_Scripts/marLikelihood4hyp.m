@@ -23,12 +23,13 @@ function [minlogp,dlogpdtheta] = marLikelihood4hyp(xT,y,h,unk,hyp4)
     H = h(xT)';
     mh  = size(H,1);
 
-    B = unk(4)*eye(mh);
+    
 
 %     minlogp = (0.5*(H'*b-y)'*inv(Ky+H'*B*H)*(H'*b-y)...
 %                 +0.5*log(det(Ky+H''*B*H))...
 %                 +N/2*log(2*pi));                  % GP 4 ML (2.43)
     if hyp4 == 1
+        B = unk(4)*eye(mh);
         A = inv(B)+H*inv(Ky)*H';                    % GP 4 ML (2.44)
         C = inv(Ky)*H'*inv(A)*H*inv(Ky);            % GP 4 ML (2.44)
         minlogp = ( 0.5*y'*inv(Ky)*y...
