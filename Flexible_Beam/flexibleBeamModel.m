@@ -1,6 +1,7 @@
 close all; 
 clear all; 
 clc;
+addpath('C:\Users\maxva\Google Drive\Documenten\TuE\Master\Thesis\MasterThesis\Machine_Learning_Basic_Scripts');    % for RBF kernel
 %% definitions
 L = 0.5; %m
 W = 40e-3; %m
@@ -10,6 +11,13 @@ Ro = 7850;
 HMMS = 5;
 CS=3; %rectangular
 Ix = [1 361 721]; %[1 721]
+newIndices = [110 220 330 440 550 660];
+N = length(newIndices);
+%GP
+noPriors = 200;
+% h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3];    % basis for mean function
+h = @(x) [ones(size(x(:),1),1)];
+series = 1; 
 %% UI
 methodLQ = questdlg('constructing L & Q from:', ...
     'constructing L & Q from:', ...
@@ -68,5 +76,9 @@ Gsys = Gy;
 load GyGzcontroller.mat
 Ts = shapeit_data.C_tf_z.Ts;
 %% ILC
-[theta_jplus1,G,history] = FlexibleBeamILCBF(220,toeplitzc,indx,4,1,W,P,omegaList,zeta);
-
+for i = 1:N
+    [theta_grid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,4,0,W,P,omegaList,zeta);
+    close gcf;
+end
+%% GP
+[mu, xprior,~] = GPregression(noPriors,m,N,X(newIndices),theta_grid,h,series);

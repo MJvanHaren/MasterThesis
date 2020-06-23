@@ -37,8 +37,7 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     Gss = c2d(ss(G),Ts);
     PS = feedback(Gss,CDT);                 % for simulating signals
     %% trajectory
-    [ttraj, ddx]  = make4(0.75,2,5,250,2500,Ts); % check, maybe longer (0.5,,,,,,) 0.75 2 5 250 2500
-%     [ttraj, ddx]  = make4(5,50,500,10000,100000,Ts); % check, maybe longer (0.5,,,,,,)
+    [ttraj, ddx]  = make4(0.01,1,1.5,100,250,Ts);
     [~,tx,d,j,a,v,p,~]=profile4(ttraj,ddx(1),Ts);
     ref = timeseries([p v a j d],tx);       % needed in simulink
     N = length(tx);
