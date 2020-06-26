@@ -11,13 +11,15 @@ Ro = 7850;
 HMMS = 5;
 CS=3; %rectangular
 Ix = [1 361 721]; %[1 721]
-newIndices = [110 220 330 440 550 660];
-N = length(newIndices);
+indices = [361 10 110 220 550 660 705];
+newIndices = [60 180 375 580 690];
+N = length(indices);
 %GP
 noPriors = 200;
-% h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3];    % basis for mean function
-h = @(x) [ones(size(x(:),1),1)];
+h = @(x) [ones(length(x(:)),1) x(:) x(:).^2];    % basis for mean function
+% h = @(x) [ones(size(x(:),1),1)];
 series = 1; 
+N_trials_ILC = 4;
 %% UI
 methodLQ = questdlg('constructing L & Q from:', ...
     'constructing L & Q from:', ...
@@ -38,7 +40,7 @@ m = length(indx); % amount of basises used
 [Xnx, betaN, fn] = FFbeam(L,W,Th,E,Ro,HMMS,CS);
 s = tf('s');
 omegaList = [4 10 fn]*2*pi;
-zeta = [5 5e-1 betaN];
+zeta = [5 5 betaN];
 R = length(omegaList);
 P = 5e3*ones(R,1);
 X = linspace(0,L,size(Xnx,2));
@@ -68,17 +70,62 @@ for i = 1:length(Ix)
 end
 Gz = G{2};
 figure(2);
-bodemag(Gz,options);hold on;
+bode(Gz);hold on;
 Gy = 0.5*(G{1}+G{end});
-bodemag(Gy,options);
+bode(Gy);
 legend('$G\_{z}$','$G\_{y}$','Interpreter','Latex','FontSize',14)
 Gsys = Gy;
 load GyGzcontroller.mat
 Ts = shapeit_data.C_tf_z.Ts;
 %% ILC
 for i = 1:N
-    [theta_grid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,4,0,W,P,omegaList,zeta);
+    [theta_grid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,1,W,P,omegaList,zeta);
     close gcf;
 end
+
+figure
+plot(X(indices),theta_grid(1,:),'s');
+figure
+plot(X(indices),theta_grid(2,:),'s');
 %% GP
-[mu, xprior,~] = GPregression(noPriors,m,N,X(newIndices),theta_grid,h,series);
+% close all
+% [mu, xprior,~] = GPregression(noPriors,m,N,X(newIndices),theta_grid,h,series);
+%% resampling with  GP and others
+newTheta = zeros(m,length(newIndices));
+for i = 1:length(newIndices)
+%     [newTheta(:,i),~,historyGP(i,:)] = FlexibleBeamILCBF(xprior(newSnapIndex(i)),toeplitzc,indx,N_trials_ILC,0,mu(newSnapIndex(i),:));
+    [~,index] = min(abs(indices-newIndices(i)));
+    [~,~,historyBF(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta,theta_grid(:,index)');
+    [~,~,historyBF2(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta,theta_grid(:,1)');
+end
+%%
+figure
+for i = 1:N
+    p1 = plot(X(indices(i)),history(i,:).eNorm(1,end),'+','Color',	[0, 0.4470, 0.7410],'Markersize',15); hold on;
+end
+for i = 1:length(newIndices)
+%     p2 = plot(xprior(newSnapIndex(i)),historyGP(i,:).eNorm(1,1),'s','Color',	[0.8500, 0.3250, 0.0980],'MarkerFaceColor',[0.8500, 0.3250, 0.0980],'Markersize',10);
+    p3 = plot(X(newIndices(i)),historyBF(i,:).eNorm(1,1),'.','Color',	[0.4940, 0.1840, 0.5560],'Markersize',30);
+    p4 = plot(X(newIndices(i)),historyBF2(i,:).eNorm(1,1),'^','Color',	[0.4660, 0.6740, 0.1880],'MarkerFaceColor',[0.4660, 0.6740, 0.1880],'Markersize',10);
+end
+
+
+xlabel('Position x on free-free beam [m]');
+ylabel('||e||_2 [m^2]');
+% legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at 0.5m'},'Location','best')
+legend([p1 p3 p4],{'Training data with converged FF parameters','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at centre of beam'},'Location','best');
+%%
+figure
+for i = 1:N
+    p1 = plot(X(indices(i)),history(i,:).eInfNorm(1,end),'+','Color',	[0, 0.4470, 0.7410],'Markersize',15); hold on;
+end
+for i = 1:length(newIndices)
+%     p2 = plot(xprior(newSnapIndex(i)),historyGP(i,:).eInfNorm(1,1),'s','Color',	[0.8500, 0.3250, 0.0980],'MarkerFaceColor',[0.8500, 0.3250, 0.0980],'Markersize',10);
+    p3 = plot(X(newIndices(i)),historyBF(i,:).eInfNorm(1,1),'.','Color',	[0.4940, 0.1840, 0.5560],'Markersize',30);
+    p4 = plot(X(newIndices(i)),historyBF2(i,:).eInfNorm(1,1),'^','Color',	[0.4660, 0.6740, 0.1880],'MarkerFaceColor',[0.4660, 0.6740, 0.1880],'Markersize',10);
+end
+
+xlabel('Position x on free-free beam [m]');
+ylabel('||e||_? [m^2]');
+% legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at 0.5m'},'Location','best')
+legend([p1 p3 p4],{'Training data with converged FF parameters','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at centre of beam'},'Location','best')

@@ -2,3 +2,7 @@
 *.asv
 
 *.xml
+
+*.autosave
+
+Flexible_Beam/data.mat

@@ -28,16 +28,16 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     end
     
     
-    
     load('GyGzcontroller.mat');     % load controller synth. from shapeit
     C = shapeit_data.C_tf;
     CDT = shapeit_data.C_tf_z;
     Ts = shapeit_data.C_tf_z.Ts;
-
+    
     Gss = c2d(ss(G),Ts);
     PS = feedback(Gss,CDT);                 % for simulating signals
     %% trajectory
-    [ttraj, ddx]  = make4(0.01,1,1.5,100,250,Ts);
+    [ttraj, ddx]  = make4(1,2,3,15,150,Ts);
+%     [ttraj, ddx]  = make4(0.5e-3,0.1,2,10,150,Ts);
     [~,tx,d,j,a,v,p,~]=profile4(ttraj,ddx(1),Ts);
     ref = timeseries([p v a j d],tx);       % needed in simulink
     N = length(tx);
@@ -69,9 +69,9 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
         ylabel('Snap [m/s^4]')
     end
     %%  ILC BF
-    we = eye(N)*1e6; %% I_N
+    we = eye(N)*1e3; %% I_N
     wf = eye(N)*1e-6;
-    wDf = eye(N)*3e-6;
+    wDf = eye(N)*1e-3;
 
     if toeplitzc
         % Impulse response matrix J
@@ -88,6 +88,7 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
         R2 = inv(psi'*(J'*we*J+wf+wDf)*psi);
         L = R2*psi'*J'*we; % toeplitz matrix
         Q = R2*psi'*(J'*we*J+wDf)*psi;
+%         disp(max(svd(Q-L*J*psi')));
     else
         %Compute learning filters efficiently
         JPsi = zeros(N,mpsi);
@@ -111,7 +112,7 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
         f_jplus1 = psi*(varargin{10})';
         theta_jplus1 = varargin{10}';
     else
-        error('Specifiy 4 or 5 arguments for this function!')
+        error('Specifiy 9 or 10 arguments for this function!')
     end
     
     if plotToggle

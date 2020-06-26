@@ -12,13 +12,15 @@ function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series)
     mh = size(h(1),2);
      %% optimization of the hyper parameters ini
     x0 = [2;xTraining(1)*1e-1;7.5];             % initial guess for hyper parameters
-    ub = [10000,1e-3,10000,10000];                   % lower and upper bounds for hyper parameters
-    lb = [0.025,1e-15,0.025,10];
+    ub = [10,1e-3,10,10000];                   % lower and upper bounds for hyper parameters
+    lb = [1e-10,1e-50,1e-10,10];
 
-    nGrids = 12;  
-    x01 = linspace(0.01,100,nGrids);
-    x02 = logspace(-12,-5,nGrids);
-    x03 = logspace(-2,2,nGrids);
+    nGrids = 20;  
+    x01 = linspace(1e-1,5,nGrids);
+
+    x02 = logspace(-15,-7,nGrids);
+%     x03 = linspace(1e-10,1e-3,nGrids);
+x03 =logspace(log10(mean(yTraining)/100),log10(mean(yTraining)*10),nGrids);
     if series == 1 
         x04 = 1;
         hyp4 = 0;
@@ -59,11 +61,12 @@ function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series)
             [I]=find(fval==mini);
         end
         xres0 = [X01(I); X02(I);X03(I);X04(I)];
-        options = optimoptions('fmincon','Display','off',...
+        options = optimoptions('fmincon','Display','final-detailed',...
                     'Algorithm','interior-point',...          % interior point does not work correctly with specifyobjectivegradient on
                     'SpecifyObjectiveGradient',false,...
                     'CheckGradients',false,...
-                    'StepTolerance',1e-10);
+                    'StepTolerance',1e-50,...
+                    'OptimalityTolerance',1e-10);
         [xres,~] = fmincon(@(x) marLikelihood4hyp(xTraining,y,h,x,hyp4),xres0,[],[],[],[],lb,ub,[],options);
 
         meanfunc = [];
@@ -111,7 +114,7 @@ function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series)
         xresMin = exp([hypUpdate.cov(1);hypUpdate.lik;hypUpdate.cov(2)]);
         title(['Basis #',num2str(i),' using minimize function']);
 %         ylim([A B]);
-        xlabel('Position xs [m]');
+        xlabel('Position x [m]');
         ylabel('Feedforward parameter [var]');
         subplot(floor(sqrt(m)),2*ceil(sqrt(m)),2*(i-1)+1);
         inBetween = [(mu(:,i)+3*sqrt(var(:,i)))' fliplr((mu(:,i)-3*sqrt(var(:,i)))')];
@@ -121,8 +124,8 @@ function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series)
         plot(xTraining,y,'+','MarkerSize',10);
         
         title(['Basis #',num2str(i),' using grid+fmincon'])
-        xlabel('Position xs [m]');
-        ylabel('Snap Feedforward parameter [kgs^2]');
+        xlabel('Position x [m]');
+        ylabel('Feedforward parameter [var]');
 %         ylim([A B]);
     end
     legend('$\mu \pm 3\sigma$','$\mu$ of fitted posterior function','Generated samples','Interpreter','Latex')
