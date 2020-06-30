@@ -26,9 +26,10 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     for r = 1:nR
         G = G+(W(r,Ix)*P(r))/(s^2+omegaList(r)^2+2*zeta(r)*s);
     end
+%     figure(1)
+%     bode(G);
     
-    
-    load('GyGzcontroller.mat');     % load controller synth. from shapeit
+    load('GyGzcontrollerWorse.mat');     % load controller synth. from shapeit
     C = shapeit_data.C_tf;
     CDT = shapeit_data.C_tf_z;
     Ts = shapeit_data.C_tf_z.Ts;
@@ -36,14 +37,19 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     Gss = c2d(ss(G),Ts);
     PS = feedback(Gss,CDT);                 % for simulating signals
     %% trajectory
-    [ttraj, ddx]  = make4(1,2,3,15,150,Ts);
-%     [ttraj, ddx]  = make4(0.5e-3,0.1,2,10,150,Ts);
+%     [ttraj, ddx]  = make4(1,2,3,15,150,Ts);
+    [ttraj, ddx]  = make4(0.5e-3,1,20,100,1500,Ts);
     [~,tx,d,j,a,v,p,~]=profile4(ttraj,ddx(1),Ts);
-    ref = timeseries([p v a j d],tx);       % needed in simulink
-    N = length(tx);
+
+    
+    yref = [p;zeros(40,1)+p(end);-p+p(end)];
+    tin = 0:Ts:(length(yref)-1)*Ts;
+    yrefTimeSeries = timeseries(yref,tin);
+    N = length(yref);
     basisArray = [p sign(v) v a j d];
     psi = basisArray(:,basisList);
     mpsi = size(psi,2);
+    
     %% figure
     if 0
         figure
@@ -67,11 +73,11 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
         plot(tx,d)
         xlabel('Time [s]')
         ylabel('Snap [m/s^4]')
-    end
+   end
     %%  ILC BF
-    we = eye(N)*1e3; %% I_N
-    wf = eye(N)*1e-6;
-    wDf = eye(N)*1e-3;
+    we = eye(N)*1e6; %% I_N
+    wf = eye(N)*0e-6;
+    wDf = eye(N)*0e-6;
 
     if toeplitzc
         % Impulse response matrix J
@@ -90,32 +96,39 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
         Q = R2*psi'*(J'*we*J+wDf)*psi;
 %         disp(max(svd(Q-L*J*psi')));
     else
+        z = tf('z',Ts);
+        xi = (z-1)/(z*Ts); % Joint input shaping....... (F boeren)
+%         xi = 1/(Ts*(1-z^-1)); % Rational basis functions... J bolder
         %Compute learning filters efficiently
         JPsi = zeros(N,mpsi);
         for indexBasisFunction = 1 : mpsi
-            JPsi(:,indexBasisFunction) = lsim(PS,psi(:,indexBasisFunction));
+            if basisList(indexBasisFunction) == 1
+                Psi(:,indexBasisFunction) = yref;
+            elseif basisList(indexBasisFunction) == 2
+                Psi(:,indexBasisFunction) = sign(lsim(xi,yref));
+            else
+                Psi(:,indexBasisFunction) = lsim(xi^(basisList(indexBasisFunction)-2),yref);
+            end
+            JPsi(:,indexBasisFunction) = lsim(PS,Psi(:,indexBasisFunction));
         end
-        R = JPsi.'*we*JPsi+psi.'*(wf+wDf)*psi;
-        Q = R\(JPsi.'*we*JPsi+psi.'*wDf*psi);
+        R = JPsi.'*we*JPsi+Psi.'*(wf+wDf)*Psi;
+        Q = R\(JPsi.'*we*JPsi+Psi.'*wDf*Psi);
         L = R\(JPsi.'*we); % simulatie
     end
 
     %% trials
-    t = tx;
-
-
-
     if nargin == 9
         f_jplus1 = zeros(N,1);
         theta_jplus1 = zeros(mpsi,1);
     elseif nargin == 10
-        f_jplus1 = psi*(varargin{10})';
+        f_jplus1 = Psi*(varargin{10})';
         theta_jplus1 = varargin{10}';
     else
         error('Specifiy 9 or 10 arguments for this function!')
     end
     
     if plotToggle
+        t = tin;
         PlotTrialData;
     end
     % Initialize storage variables.
@@ -129,7 +142,7 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
         f_j = f_jplus1;
         theta_j = theta_jplus1;
 
-        f_jsim = timeseries(f_j,tx);
+        f_jsim = timeseries(f_j,tin);
         sim('flexibleBeamSim.slx','SrcWorkspace','current');
 
         % data acq.
@@ -149,8 +162,8 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
             PlotTrialData;
         end
 
-        theta_jplus1 = Q*theta_j+L*e_j';
-        f_jplus1 = psi*theta_jplus1;
+        theta_jplus1 = Q*theta_j+0.75*L*e_j';
+        f_jplus1 = Psi*theta_jplus1;
 
     end
 end

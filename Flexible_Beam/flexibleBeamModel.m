@@ -16,10 +16,10 @@ newIndices = [60 180 375 580 690];
 N = length(indices);
 %GP
 noPriors = 200;
-h = @(x) [ones(length(x(:)),1) x(:) x(:).^2];    % basis for mean function
+h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4 x(:).^5];    % basis for mean function
 % h = @(x) [ones(size(x(:),1),1)];
 series = 1; 
-N_trials_ILC = 4;
+N_trials_ILC =6;
 %% UI
 methodLQ = questdlg('constructing L & Q from:', ...
     'constructing L & Q from:', ...
@@ -75,21 +75,19 @@ Gy = 0.5*(G{1}+G{end});
 bode(Gy);
 legend('$G\_{z}$','$G\_{y}$','Interpreter','Latex','FontSize',14)
 Gsys = Gy;
-load GyGzcontroller.mat
-Ts = shapeit_data.C_tf_z.Ts;
 %% ILC
 for i = 1:N
-    [theta_grid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,1,W,P,omegaList,zeta);
+    [theta_grid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta);
     close gcf;
 end
-
+%%
 figure
 plot(X(indices),theta_grid(1,:),'s');
 figure
 plot(X(indices),theta_grid(2,:),'s');
 %% GP
-% close all
-% [mu, xprior,~] = GPregression(noPriors,m,N,X(newIndices),theta_grid,h,series);
+close all
+[mu, xprior,~] = GPregression(noPriors,m,N,X(indices),theta_grid,h,series,indx);
 %% resampling with  GP and others
 newTheta = zeros(m,length(newIndices));
 for i = 1:length(newIndices)

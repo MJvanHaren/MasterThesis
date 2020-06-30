@@ -1,4 +1,4 @@
-function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series)
+function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series,psiList)
     % n                 = amount of priors
     % m                 = amount of basises(functions) to regress
     % N                 = amound of training data
@@ -12,28 +12,29 @@ function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series)
     mh = size(h(1),2);
      %% optimization of the hyper parameters ini
     x0 = [2;xTraining(1)*1e-1;7.5];             % initial guess for hyper parameters
-    ub = [10,1e-3,10,10000];                   % lower and upper bounds for hyper parameters
+    ub = [50,1e-3,50,10000];                   % lower and upper bounds for hyper parameters
     lb = [1e-10,1e-50,1e-10,10];
 
-    nGrids = 20;  
-    x01 = linspace(1e-1,5,nGrids);
-
-    x02 = logspace(-15,-7,nGrids);
-%     x03 = linspace(1e-10,1e-3,nGrids);
-x03 =logspace(log10(mean(yTraining)/100),log10(mean(yTraining)*10),nGrids);
-    if series == 1 
-        x04 = 1;
-        hyp4 = 0;
-    else
-        x04 = linspace(50,2500,nGrids);
-        hyp4 = 1;
-    end
-    [X01,X02,X03,X04] = ndgrid(x01,x02,x03,x04);
-
-    fval = zeros(size(X01,1),size(X02,2),size(X03,3),size(X04,4));
+    nGrids = 30;  
+    
 
     for i = 1:m
         y = yTraining(i,:)';
+        x01 = linspace(1e-1,15,nGrids);
+        x02 = logspace(log10(min(abs(y))*1e-5),log10(max(abs(y))*1e-1),nGrids);
+        x03 = logspace(log10(min(abs(y))*1e-3),log10(max(abs(y))*1e3),nGrids);
+        if series == 1 
+            x04 = 1;
+            hyp4 = 0;
+        else
+            x04 = linspace(50,2500,nGrids);
+            hyp4 = 1;
+        end
+        [X01,X02,X03,X04] = ndgrid(x01,x02,x03,x04);
+
+        fval = zeros(size(X01,1),size(X02,2),size(X03,3),size(X04,4));
+        
+        %% iterate over grid
         for ii = 1:(size(X01,1))
             for j = 1:(size(X02,2))
                 for ij = 1:size(X03,3)
@@ -89,7 +90,7 @@ x03 =logspace(log10(mean(yTraining)/100),log10(mean(yTraining)*10),nGrids);
         B = xres(4)*eye(mh);
         H = h(xTraining)';
         if series == 1
-            betaBar = inv(H*H')*H*yTraining(i,:)';
+            betaBar = inv(H*H')*H*y;
         else
             betaBar = inv(H*inv(Ky)*H')*H*inv(Ky)*y;
         end
@@ -104,29 +105,18 @@ x03 =logspace(log10(mean(yTraining)/100),log10(mean(yTraining)*10),nGrids);
         var(:,i) = (diag(k_ss)' - sum(Lk.^2,1))';
 
         %% plotting
-% %         A = min([mu(:,i)-3*sqrt(var(:,i));mu2(:,i)-3*sqrt(var2(:,i))]);
-%         B = max([mu(:,i)+3*sqrt(var(:,i));mu2(:,i)+3*sqrt(var2(:,i))]);
+
         figure(2);
-        subplot(floor(sqrt(m)),2*ceil(sqrt(m)),2*(i-1)+2);
-        f = [mu2(:,i)+3*sqrt(var2(:,i)); flipdim(mu2(:,i)-3*sqrt(var2(:,i)),1)];
-        fill([xPrior'; flipdim(xPrior',1)], f, [7 7 7]/8)
-        hold on; plot(xPrior', mu2(:,i)); plot(xTraining', y, '+','MarkerSize',10);
-        xresMin = exp([hypUpdate.cov(1);hypUpdate.lik;hypUpdate.cov(2)]);
-        title(['Basis #',num2str(i),' using minimize function']);
-%         ylim([A B]);
-        xlabel('Position x [m]');
-        ylabel('Feedforward parameter [var]');
-        subplot(floor(sqrt(m)),2*ceil(sqrt(m)),2*(i-1)+1);
+        subplot(floor(sqrt(m)),ceil(sqrt(m)),(i-1)+1);
         inBetween = [(mu(:,i)+3*sqrt(var(:,i)))' fliplr((mu(:,i)-3*sqrt(var(:,i)))')];
         x2 = [xPrior, fliplr(xPrior)];
         fill(x2,inBetween, [7 7 7]/8);hold on;
         plot(xPrior,mu(:,i)); 
         plot(xTraining,y,'+','MarkerSize',10);
-        
-        title(['Basis #',num2str(i),' using grid+fmincon'])
         xlabel('Position x [m]');
         ylabel('Feedforward parameter [var]');
-%         ylim([A B]);
+        xlim([0 0.5])
+        title(['Basis $\psi$ number ',num2str(psiList(i))],'Interpreter','Latex');
     end
     legend('$\mu \pm 3\sigma$','$\mu$ of fitted posterior function','Generated samples','Interpreter','Latex')
 end
