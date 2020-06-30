@@ -1,4 +1,4 @@
-function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series,psiList)
+function [mu, xPrior, var,xres,betaBar] = GPregression(n,m,N,xTraining,yTraining,h,series,psiList)
     % n                 = amount of priors
     % m                 = amount of basises(functions) to regress
     % N                 = amound of training data
@@ -68,7 +68,7 @@ function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series,psi
                     'CheckGradients',false,...
                     'StepTolerance',1e-50,...
                     'OptimalityTolerance',1e-10);
-        [xres,~] = fmincon(@(x) marLikelihood4hyp(xTraining,y,h,x,hyp4),xres0,[],[],[],[],lb,ub,[],options);
+        [xres(:,i),~] = fmincon(@(x) marLikelihood4hyp(xTraining,y,h,x,hyp4),xres0,[],[],[],[],lb,ub,[],options);
 
         meanfunc = [];
         covfunc = @covSEiso;                        % Squared Exponental covariance function
@@ -78,30 +78,30 @@ function [mu, xPrior, var] = GPregression(n,m,N,xTraining,yTraining,h,series,psi
         [mu2(:,i), var2(:,i)] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, xTraining', y, xPrior');
         xres2 = exp([hypUpdate.cov(1) hypUpdate.lik hypUpdate.cov(2)]);
         %% evaluation of kernel functions using optimized hyperparameters
-        k = GPSEKernel(xTraining',xTraining',xres(1));
-        k_s = xres(3)*GPSEKernel(xTraining',xPrior',xres(1));
+        k = GPSEKernel(xTraining',xTraining',xres(1,i));
+        k_s = xres(3,i)*GPSEKernel(xTraining',xPrior',xres(1,i));
 
         %L and Lk
-        Ky = xres(3)*k+xres(2)*eye(N);
+        Ky = xres(3,i)*k+xres(2,i)*eye(N);
         L = chol(Ky,'lower');
         Lk = L \ k_s;
         
         % mean function
-        B = xres(4)*eye(mh);
+        B = xres(4,i)*eye(mh);
         H = h(xTraining)';
         if series == 1
-            betaBar = inv(H*H')*H*y;
+            betaBar(:,i) = inv(H*H')*H*y;
         else
-            betaBar = inv(H*inv(Ky)*H')*H*inv(Ky)*y;
+            betaBar(:,i) = inv(H*inv(Ky)*H')*H*inv(Ky)*y;
         end
         Hs = h(xPrior)';
         R = Hs-H*inv(Ky)*k_s;
         
         % kernel of prediction
-        k_ss = xres(3)*GPSEKernel(xPrior',xPrior',xres(1)) + R'*inv(H*inv(Ky)*H')*R;
+        k_ss = xres(3,i)*GPSEKernel(xPrior',xPrior',xres(1,i)) + R'*inv(H*inv(Ky)*H')*R;
         
         % mu and SD/var
-        mu(:,i) = (Lk') * (L \ y)+R'*betaBar;
+        mu(:,i) = (Lk') * (L \ y)+R'*betaBar(:,i);
         var(:,i) = (diag(k_ss)' - sum(Lk.^2,1))';
 
         %% plotting
