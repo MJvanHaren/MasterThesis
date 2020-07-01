@@ -1,10 +1,12 @@
-function [mu, xPrior, var,xres,betaBar] = GPregression(n,m,N,xTraining,yTraining,h,series,psiList)
+function [mu, xPrior, var,xres,betaBar] = GPRegressionFlexibleBeam(n,m,N,xTraining,yTraining,h,series,psiList)
     % n                 = amount of priors
     % m                 = amount of basises(functions) to regress
     % N                 = amound of training data
     % xTraining         = range of x values of training data
     % yTraining         = training data
     % h                 = basis for mean function
+    %%
+    [c1, c2, c3, c4, c5,c6,c7] = MatlabDefaultPlotColors();
     %% definitions
     xstart = 0;
     xend = 0.5;
@@ -105,19 +107,18 @@ function [mu, xPrior, var,xres,betaBar] = GPregression(n,m,N,xTraining,yTraining
         var(:,i) = (diag(k_ss)' - sum(Lk.^2,1))';
 
         %% plotting
-
         figure(2);
         subplot(floor(sqrt(m)),ceil(sqrt(m)),(i-1)+1);
         inBetween = [(mu(:,i)+3*sqrt(var(:,i)))' fliplr((mu(:,i)-3*sqrt(var(:,i)))')];
         x2 = [xPrior, fliplr(xPrior)];
         fill(x2,inBetween, [7 7 7]/8);hold on;
-        plot(xPrior,mu(:,i)); 
-        plot(xTraining,y,'+','MarkerSize',10);
+        plot(xPrior,mu(:,i),'Color',c2); 
+        plot(xTraining,y,'+','MarkerSize',15,'Color',c7);
         xlabel('Position x [m]');
         ylabel('Feedforward parameter [var]');
         xlim([0 0.5])
-        title(['Basis $\psi$ number ',num2str(psiList(i))],'Interpreter','Latex');
+        title({['Basis $\psi$ number ',num2str(psiList(i))] ''});
     end
-    legend('$\mu \pm 3\sigma$','$\mu$ of fitted posterior function','Generated samples','Interpreter','Latex')
+    legend('$\mu \pm 3\sigma$','$\mu$ of fitted posterior function','Generated samples','Location','best')
 end
 
