@@ -1,4 +1,4 @@
-function [mu, xPrior, var,xres,betaBar] = GPregression(n,m,N,xTraining,yTraining,h,series,psiList)
+function [mu, xPrior, var,xres,betaBar] = GPRegressionFlexibleBeam(n,m,N,xTraining,yTraining,h,series,psiList)
     % n                 = amount of priors
     % m                 = amount of basises(functions) to regress
     % N                 = amound of training data

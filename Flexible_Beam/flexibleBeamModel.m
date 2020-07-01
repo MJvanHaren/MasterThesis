@@ -2,11 +2,8 @@ close all;
 clear all; 
 clc;
 %%
-addpath('C:\Users\maxva\Google Drive\Documenten\TuE\Master\Thesis\MasterThesis\Machine_Learning_Basic_Scripts');    % for RBF kernel
-set(groot, 'defaultAxesTickLabelInterpreter','latex'); 
-set(groot, 'defaultLegendInterpreter','latex'); 
-set(groot, 'DefaultTextInterpreter', 'latex');
-set(groot, 'DefaultAxesFontSize', 12)
+addpath(genpath('C:\Users\maxva\Google Drive\Documenten\TuE\Master\Thesis\MasterThesis'));    % for auxilary functions (GP/plot style etc.)
+SetPlotLatexStyle();
 %% definitions
 L = 0.5; %m
 W = 40e-3; %m
@@ -85,7 +82,7 @@ for i = 1:N
 end
 %% GP
 close all
-[mu, xprior,~,hyperParameters,betaBar] = GPregression(noPriors,m,N,X(indices),theta_grid,h,series,indx);
+[mu, xprior,~,hyperParameters,betaBar] = GPRegressionFlexibleBeam(noPriors,m,N,X(indices),theta_grid,h,series,indx);
 %% resampling with  GP and others
 newTheta = zeros(m,length(newIndices));
 GPTheta = zeros(m,length(newIndices));
