@@ -4,6 +4,7 @@ clc;
 %%
 addpath(genpath('C:\Users\maxva\Google Drive\Documenten\TuE\Master\Thesis\MasterThesis'));    % for auxilary functions (GP/plot style etc.)
 SetPlotLatexStyle();
+[c1, c2, c3, c4, c5,c6,c7] = MatlabDefaultPlotColors();
 %% definitions
 L = 0.5;                                                                    % [m], length of free-free beam
 W = 40e-3;                                                                  % [m], width (or height) of free-free beam
@@ -90,12 +91,12 @@ end
 %%
 figure
 for i = 1:N
-    p1 = plot(X(indices(i)),history(i,:).eNorm(1,end),'+','Color',	[0, 0.4470, 0.7410],'Markersize',15); hold on;
+    p1 = plot(X(indices(i)),history(i,:).eNorm(1,end),'+','Color',c1,'Markersize',15); hold on;
 end
 for i = 1:length(newIndices)
-    p2 = plot(X(newIndices(i)),historyGP(i,:).eNorm(1,1),'s','Color',	[0.8500, 0.3250, 0.0980],'MarkerFaceColor',[0.8500, 0.3250, 0.0980],'Markersize',10);
-    p3 = plot(X(newIndices(i)),historyBF(i,:).eNorm(1,1),'.','Color',	[0.4940, 0.1840, 0.5560],'Markersize',30);
-    p4 = plot(X(newIndices(i)),historyBF2(i,:).eNorm(1,1),'^','Color',	[0.4660, 0.6740, 0.1880],'MarkerFaceColor',[0.4660, 0.6740, 0.1880],'Markersize',10);
+    p2 = plot(X(newIndices(i)),historyGP(i,:).eNorm(1,1),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
+    p3 = plot(X(newIndices(i)),historyBF(i,:).eNorm(1,1),'.','Color',c4,'Markersize',30);
+    p4 = plot(X(newIndices(i)),historyBF2(i,:).eNorm(1,1),'^','Color',c5,'MarkerFaceColor',c5,'Markersize',10);
 end
 
 
@@ -105,12 +106,12 @@ legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameter
 %%
 figure
 for i = 1:N
-    p1 = plot(X(indices(i)),history(i,:).eInfNorm(1,end),'+','Color',	[0, 0.4470, 0.7410],'Markersize',15); hold on;
+    p1 = plot(X(indices(i)),history(i,:).eInfNorm(1,end),'+','Color',c1,'Markersize',15); hold on;
 end
 for i = 1:length(newIndices)
-    p2 = plot(X(newIndices(i)),historyGP(i,:).eInfNorm(1,1),'s','Color',	[0.8500, 0.3250, 0.0980],'MarkerFaceColor',[0.8500, 0.3250, 0.0980],'Markersize',10);
-    p3 = plot(X(newIndices(i)),historyBF(i,:).eInfNorm(1,1),'.','Color',	[0.4940, 0.1840, 0.5560],'Markersize',30);
-    p4 = plot(X(newIndices(i)),historyBF2(i,:).eInfNorm(1,1),'^','Color',	[0.4660, 0.6740, 0.1880],'MarkerFaceColor',[0.4660, 0.6740, 0.1880],'Markersize',10);
+    p2 = plot(X(newIndices(i)),historyGP(i,:).eInfNorm(1,1),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
+    p3 = plot(X(newIndices(i)),historyBF(i,:).eInfNorm(1,1),'.','Color',c4,'Markersize',30);
+    p4 = plot(X(newIndices(i)),historyBF2(i,:).eInfNorm(1,1),'^','Color',c5,'MarkerFaceColor',c5,'Markersize',10);
 end
 
 xlabel('Position x on free-free beam $[m]$');
@@ -124,13 +125,13 @@ end
 figure
 for i =1:m
     subplot(floor(sqrt(m)),ceil(sqrt(m)),i)
-    plot(X(newIndices),newThetaGrid(i,:),'+','Color',	[0, 0.4470, 0.7410],'Markersize',15); hold on;
-    plot(X(newIndices),GPTheta(i,:),'s','Color',	[0.8500, 0.3250, 0.0980],'MarkerFaceColor',[0.8500, 0.3250, 0.0980],'Markersize',10);
+    plot(X(newIndices),newThetaGrid(i,:),'+','Color',c1,'Markersize',15); hold on;
+    plot(X(newIndices),GPTheta(i,:),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
     for ii = 1:length(newIndices)
         [~,index] = min(abs(indices-newIndices(ii)));
         nearestNeighbour(:,ii) = theta_grid(:,index);
     end
-    plot(X(newIndices),nearestNeighbour(i,:),'.','Color',	[0.4940, 0.1840, 0.5560],'Markersize',30);
+    plot(X(newIndices),nearestNeighbour(i,:),'.','Color',c4,'Markersize',30);
     
     xlabel('Position on free-free beam $[m]$');
     ylabel('Feedforward parameter [var]');
