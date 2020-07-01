@@ -17,10 +17,11 @@ Ix = [1 361 721];                                                           % in
 indices = [361 10 110 220 550 660 705];                                     % indices to perform ILC with BF to estimate FF parameters
 newIndices = [60 180 375 580 690];                                          % indices to perform GP/nearest neighbour on 
 N = length(indices);
-%GP
+
 noPriors = 200;                                                             % number of priors for GP regression
 h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4 x(:).^5];       % basis for mean function, use prior model knowledge for this(!)
 series = 1;                                                                 % 1=Do least squares before GP to determine mean function. 0=determine mean function using optimization in parallel with hyper parameter optimization
+
 N_trials_ILC =6;                                                            % amount of trials done in ILC
 %% UI
 methodLQ = questdlg('constructing L & Q from:', ...
@@ -38,7 +39,7 @@ list = {'Position','Sign Velocity','Velocity','Acceleration','Jerk','Snap'};
 [indx,~] = listdlg('ListString',list);
 m = length(indx); % amount of basises used
 
-%% execution
+%% Determine (normalized) modeshapes, damping of modes, freqency of modes and *set* gain matrix P
 [Xnx, betaN, fn] = FFbeam(L,W,Th,E,Ro,HMMS,CS);
 s = tf('s');
 omegaList = [4 10 fn]*2*pi;
@@ -51,10 +52,7 @@ W = zeros(R,Lx);
 W(1,:) = ones(1,Lx);
 W(2,:) = linspace(-1,1,Lx);
 W(3:end,:) = Xnx;
-
-
-
-%% iterating over modes and positions
+%% iterating over modes and positions to determine Gy and Gz
 options = bodeoptions;
 options.FreqUnits = 'Hz'; 
 options.MagUnits = 'dB';
@@ -66,23 +64,16 @@ for i = 1:length(Ix)
     for r = 1:R
         G{i} = G{i}+(W(r,Ix(i))*P(r))/(s^2+omegaList(r)^2+2*zeta(r)*s);
     end
-%     figure(2)
-%     bodemag(G{i},options); hold on;
 end
 Gz = G{2};
-% figure(2);
-% bode(Gz);hold on;
 Gy = 0.5*(G{1}+G{end});
-% bode(Gy);
-% legend('$G\_{z}$','$G\_{y}$','Interpreter','Latex','FontSize',14)
-Gsys = Gy;
 %% ILC
 for i = 1:N
     [theta_grid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta);
     close gcf;
 end
 %% GP
-close all
+close all;
 [mu, xprior,~,hyperParameters,betaBar] = GPRegressionFlexibleBeam(noPriors,m,N,X(indices),theta_grid,h,series,indx);
 %% resampling with  GP and others
 newTheta = zeros(m,length(newIndices));
