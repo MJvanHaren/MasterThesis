@@ -37,7 +37,6 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     Gss = c2d(ss(G),Ts);
     PS = feedback(Gss,CDT);                 % for simulating signals
     %% trajectory
-%     [ttraj, ddx]  = make4(1,2,3,15,150,Ts);
     [ttraj, ddx]  = make4(0.5e-3,1,20,100,1500,Ts);
     [~,tx,d,j,a,v,p,~]=profile4(ttraj,ddx(1),Ts);
 
@@ -77,12 +76,12 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     %%  ILC BF
     we = eye(N)*1e6; %% I_N
     wf = eye(N)*0e-6;
-    wDf = eye(N)*0e-6;
+    wDf = eye(N)*1e-3;
 
     if toeplitzc
         % Impulse response matrix J
         [PS_sysic_ss_den,PS_sysic_ss_num] = tfdata(PS,'v'); %tfdata(G_ss*S_d,'v');
-        [h,t]   = dimpulse( PS_sysic_ss_den, PS_sysic_ss_num, N );
+        [h,~]   = dimpulse( PS_sysic_ss_den, PS_sysic_ss_num, N );
         J_ini  	= toeplitz( h, [h(1) , zeros(1,N-1)] );
 
         % Set small values to zero & SPARSE:
@@ -97,8 +96,10 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
 %         disp(max(svd(Q-L*J*psi')));
     else
         z = tf('z',Ts);
-        xi = (z-1)/(z*Ts); % Joint input shaping....... (F boeren)
-%         xi = 1/(Ts*(1-z^-1)); % Rational basis functions... J bolder
+        xi = (z-1)/(z*Ts); % J. Bolder - Using iterative learning control with basis functions to compensate medium deformation in a wide-format inkjet printer
+%         xi = 1/(Ts*(1-z^-1)); % Rational basis functions... J bolder??
+%         klot niet
+
         %Compute learning filters efficiently
         JPsi = zeros(N,mpsi);
         for indexBasisFunction = 1 : mpsi

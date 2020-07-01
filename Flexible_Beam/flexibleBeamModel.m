@@ -1,7 +1,12 @@
 close all; 
 clear all; 
 clc;
+%%
 addpath('C:\Users\maxva\Google Drive\Documenten\TuE\Master\Thesis\MasterThesis\Machine_Learning_Basic_Scripts');    % for RBF kernel
+set(groot, 'defaultAxesTickLabelInterpreter','latex'); 
+set(groot, 'defaultLegendInterpreter','latex'); 
+set(groot, 'DefaultTextInterpreter', 'latex');
+set(groot, 'DefaultAxesFontSize', 12)
 %% definitions
 L = 0.5; %m
 W = 40e-3; %m
@@ -17,7 +22,6 @@ N = length(indices);
 %GP
 noPriors = 200;
 h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4 x(:).^5];    % basis for mean function
-% h = @(x) [ones(size(x(:),1),1)];
 series = 1; 
 N_trials_ILC =6;
 %% UI
@@ -45,7 +49,6 @@ R = length(omegaList);
 P = 5e3*ones(R,1);
 X = linspace(0,L,size(Xnx,2));
 Lx = length(X);
-% Ix = ceil(Lx/2);
 W = zeros(R,Lx);
 W(1,:) = ones(1,Lx);
 W(2,:) = linspace(-1,1,Lx);
@@ -69,22 +72,17 @@ for i = 1:length(Ix)
 %     bodemag(G{i},options); hold on;
 end
 Gz = G{2};
-figure(2);
-bode(Gz);hold on;
+% figure(2);
+% bode(Gz);hold on;
 Gy = 0.5*(G{1}+G{end});
-bode(Gy);
-legend('$G\_{z}$','$G\_{y}$','Interpreter','Latex','FontSize',14)
+% bode(Gy);
+% legend('$G\_{z}$','$G\_{y}$','Interpreter','Latex','FontSize',14)
 Gsys = Gy;
 %% ILC
 for i = 1:N
     [theta_grid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta);
     close gcf;
 end
-%%
-figure
-plot(X(indices),theta_grid(1,:),'s');
-figure
-plot(X(indices),theta_grid(2,:),'s');
 %% GP
 close all
 [mu, xprior,~,hyperParameters,betaBar] = GPregression(noPriors,m,N,X(indices),theta_grid,h,series,indx);
@@ -112,9 +110,9 @@ for i = 1:length(newIndices)
 end
 
 
-xlabel('Position x on free-free beam [m]');
-ylabel('||e||_2 [m^2]');
-legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at 0.5m'},'Location','best')
+xlabel('Position x on free-free beam $[m]$');
+ylabel('$\|e\|_2 [m^2]$');
+legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at 0.5m'},'Location','northoutside')
 %%
 figure
 for i = 1:N
@@ -126,6 +124,26 @@ for i = 1:length(newIndices)
     p4 = plot(X(newIndices(i)),historyBF2(i,:).eInfNorm(1,1),'^','Color',	[0.4660, 0.6740, 0.1880],'MarkerFaceColor',[0.4660, 0.6740, 0.1880],'Markersize',10);
 end
 
-xlabel('Position x on free-free beam [m]');
-ylabel('||e||_? [m^2]');
-legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at 0.5m'},'Location','best')
+xlabel('Position x on free-free beam $[m]$');
+ylabel('$\|e\|_\infty [m]$');
+legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters determined using ILC at 0.25m'},'Location','northoutside');
+%% re-doing ILC with BF at newIndices to see performance of GP
+for i = 1:length(newIndices)
+    [newThetaGrid(:,i),~,~] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta);
+end
+%% plotting
+figure
+for i =1:m
+    subplot(floor(sqrt(m)),ceil(sqrt(m)),i)
+    plot(X(newIndices),newThetaGrid(i,:),'+','Color',	[0, 0.4470, 0.7410],'Markersize',15); hold on;
+    plot(X(newIndices),GPTheta(i,:),'s','Color',	[0.8500, 0.3250, 0.0980],'MarkerFaceColor',[0.8500, 0.3250, 0.0980],'Markersize',10);
+    for ii = 1:length(newIndices)
+        [~,index] = min(abs(indices-newIndices(ii)));
+        nearestNeighbour(:,ii) = theta_grid(:,index);
+    end
+    plot(X(newIndices),nearestNeighbour(i,:),'.','Color',	[0.4940, 0.1840, 0.5560],'Markersize',30);
+    
+    xlabel('Position on free-free beam $[m]$');
+    ylabel('Feedforward parameter [var]');
+end
+legend('True feedforward parameters determined using ILC','Estimated FF parameters with GP','Estimated FF parameters using nearest neighbour');

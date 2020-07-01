@@ -112,12 +112,12 @@ function [mu, xPrior, var,xres,betaBar] = GPregression(n,m,N,xTraining,yTraining
         x2 = [xPrior, fliplr(xPrior)];
         fill(x2,inBetween, [7 7 7]/8);hold on;
         plot(xPrior,mu(:,i)); 
-        plot(xTraining,y,'+','MarkerSize',10);
+        plot(xTraining,y,'+','MarkerSize',15);
         xlabel('Position x [m]');
         ylabel('Feedforward parameter [var]');
         xlim([0 0.5])
-        title(['Basis $\psi$ number ',num2str(psiList(i))],'Interpreter','Latex');
+        title(['Basis $\psi$ number ',num2str(psiList(i))]);
     end
-    legend('$\mu \pm 3\sigma$','$\mu$ of fitted posterior function','Generated samples','Interpreter','Latex')
+    legend('$\mu \pm 3\sigma$','$\mu$ of fitted posterior function','Generated samples','Location','NorthOutside')
 end
 
