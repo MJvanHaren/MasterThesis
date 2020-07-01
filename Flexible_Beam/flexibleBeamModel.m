@@ -5,22 +5,23 @@ clc;
 addpath(genpath('C:\Users\maxva\Google Drive\Documenten\TuE\Master\Thesis\MasterThesis'));    % for auxilary functions (GP/plot style etc.)
 SetPlotLatexStyle();
 %% definitions
-L = 0.5; %m
-W = 40e-3; %m
-Th = 2e-3; %m
-E = 2.1e11;
-Ro = 7850;
-HMMS = 5;
-CS=3; %rectangular
-Ix = [1 361 721]; %[1 721]
-indices = [361 10 110 220 550 660 705];
-newIndices = [60 180 375 580 690];
+L = 0.5;                                                                    % [m], length of free-free beam
+W = 40e-3;                                                                  % [m], width (or height) of free-free beam
+Th = 2e-3;                                                                  % [m], thickness of free-free beam
+E = 2.1e11;                                                                 % [Pa], young's modulus of material (steel)
+Ro = 7850;                                                                  % [Kg/m^3], density of material (steel)
+HMMS = 5;                                                                   % [-], how many mode shapes, amount of modeshapes to estimate using euler equations
+CS=3;                                                                       % [-], shape of beam, 3 means rectangular
+
+Ix = [1 361 721];                                                           % indices on beam for Gy and Gz estimation. 1 means beginning of beam, 721 is the end
+indices = [361 10 110 220 550 660 705];                                     % indices to perform ILC with BF to estimate FF parameters
+newIndices = [60 180 375 580 690];                                          % indices to perform GP/nearest neighbour on 
 N = length(indices);
 %GP
-noPriors = 200;
-h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4 x(:).^5];    % basis for mean function
-series = 1; 
-N_trials_ILC =6;
+noPriors = 200;                                                             % number of priors for GP regression
+h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4 x(:).^5];       % basis for mean function, use prior model knowledge for this(!)
+series = 1;                                                                 % 1=Do least squares before GP to determine mean function. 0=determine mean function using optimization in parallel with hyper parameter optimization
+N_trials_ILC =6;                                                            % amount of trials done in ILC
 %% UI
 methodLQ = questdlg('constructing L & Q from:', ...
     'constructing L & Q from:', ...
