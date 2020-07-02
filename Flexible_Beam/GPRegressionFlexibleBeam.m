@@ -23,7 +23,7 @@ function [mu, xPrior, var,xres,betaBar] = GPRegressionFlexibleBeam(n,m,N,xTraini
     for i = 1:m
         y = yTraining(i,:)';
         x01 = linspace(1e-1,15,nGrids);
-        x02 = logspace(log10(min(abs(y))*1e-5),log10(max(abs(y))*1e-1),nGrids);
+        x02 = logspace(log10(min(abs(y))*1e-6),log10(max(abs(y))*1e-1),nGrids);
         x03 = logspace(log10(min(abs(y))*1e-3),log10(max(abs(y))*1e3),nGrids);
         if series == 1 
             x04 = 1;
