@@ -29,7 +29,7 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
 %     figure(1)
 %     bode(G);
     
-    load('GyGzcontrollerWorse.mat');     % load controller synth. from shapeit
+    load('GyGzcontrollerBad.mat');     % load controller synth. from shapeit
     C = shapeit_data.C_tf;
     CDT = shapeit_data.C_tf_z;
     Ts = shapeit_data.C_tf_z.Ts;
@@ -37,11 +37,12 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     Gss = c2d(ss(G),Ts);
     PS = feedback(Gss,CDT);                 % for simulating signals
     %% trajectory
-    [ttraj, ddx]  = make4(0.5e-3,1,20,100,1500,Ts);
+    [ttraj, ddx]  = make4(0.5e-3,10,200,1000,15000,Ts);
     [~,tx,d,j,a,v,p,~]=profile4(ttraj,ddx(1),Ts);
 
     
-    yref = [p;zeros(40,1)+p(end);-p+p(end)];
+%     yref = [p;zeros(40,1)+p(end);-p+p(end)];
+    yref = p;
     tin = 0:Ts:(length(yref)-1)*Ts;
     yrefTimeSeries = timeseries(yref,tin);
     N = length(yref);
@@ -155,17 +156,17 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
 
         % Store trial data.
         history.f(:,trial)          = f_j;
-        history.u(:,trial)          = u_j;
-        history.e(:,trial)          = e_j;
+        history.u(:,trial)          = u_j(:,1:N);
+        history.e(:,trial)          = e_j(:,1:N);
         history.eNorm(:,trial)      = norm(e_j,2);
         history.eInfNorm(:,trial)   = norm(e_j,Inf);
         if plotToggle
             PlotTrialData;
         end
 
-        theta_jplus1 = Q*theta_j+0.75*L*e_j';
+        theta_jplus1 = Q*theta_j+0.75*L*e_j(:,1:N)';
         f_jplus1 = Psi*theta_jplus1;
 
-    end
+     end
 end
 

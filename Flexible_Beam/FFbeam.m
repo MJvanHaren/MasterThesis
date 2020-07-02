@@ -159,59 +159,7 @@ disp('and X0=A(x-l/2) (rotational)')
 display('NOTE: Upto 5 mode shapes are displayed via the script options.') 
 disp(' Yet, using evaluated data (Xnx) of the script, more mode shapes can be plotted')
 MMS=HMMS;
-if MMS==1
-    plot(xl,Xnx(1,:), 'b-')
-    title('Mode shapes of the Free-free beam')
-    legend('Mode #1'); xlabel('x/L'); ylabel('Mode shape X_n(x)')
-    hold off
-elseif MMS==2
-        plot(xl,Xnx(1,:), 'b-'); hold on
-        plot(xl,Xnx(2,:), 'r-');grid
-        title('Mode shapes of the Free-free beam')
-        legend('Mode #1', 'Mode #2')
-        xlabel('x/L'); ylabel('Mode shape X_n(x)')
-        hold off
-elseif MMS==3
-            plot(xl,Xnx(1,:), 'b-'); hold on
-            plot(xl,Xnx(2,:), 'r-')
-            plot(xl,Xnx(3,:), 'm-');grid
-            title('Mode shapes of the Free-free beam')
-            legend('Mode #1', 'Mode #2', 'Mode #3')
-            xlabel('x/L'); ylabel('Mode shape X_n(x)')
-            hold off
-elseif MMS==4
-                plot(xl,Xnx(1,:), 'b-'); hold on
-                plot(xl,Xnx(2,:), 'r-')
-                plot(xl,Xnx(3,:), 'm-')
-                plot(xl,Xnx(4,:), 'c-'); grid
-                title('Mode shapes of the Free-free beam')
-                legend('Mode #1', 'Mode #2', 'Mode #3', 'Mode #4')
-                xlabel('x/L'); ylabel('Mode shape X_n(x)')
-                hold off
-elseif MMS==5 || MMS>5
-                    plot(xl,Xnx(1,:), 'b-'); hold on
-                    plot(xl,Xnx(2,:), 'r-')
-                    plot(xl,Xnx(3,:), 'm-')
-                    plot(xl,Xnx(4,:), 'g-')
-                    plot(xl,Xnx(5,:), 'k-')
-                    grid
-                    title('Mode shapes of the Free-free beam')
-                    legend('Mode #1', 'Mode #2', 'Mode #3', 'Mode #4', 'Mode #5')
-                    xlabel('x/L'); ylabel('Mode shape X_n(x)')
-                    hold off
-elseif MMS>=6
-    plot(xl,Xnx(1,:), 'b-'); hold on
-    plot(xl,Xnx(2,:), 'r-')
-    plot(xl,Xnx(3,:), 'm-')
-    plot(xl,Xnx(4,:), 'g-')
-    plot(xl,Xnx(5,:), 'k-')
-    plot(xl,Xnx(6,:), 'c-')
-    grid
-    title('Mode shapes of the Free-free beam')
-    legend('Mode #1', 'Mode #2', 'Mode #3', 'Mode #4', 'Mode #5', 'Mode #6')
-    xlabel('x/L'); ylabel('Mode shape X_n(x)')
-    hold off
-end
+
 % end
 
 end

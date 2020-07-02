@@ -17,11 +17,11 @@ if ~exist('PlotInit','var')
     newUnits = 'normalized';
     set(hL,'Position', newPosition,'Units', newUnits);
     xlim([0,t(end)]);
-    xlabel('t [s]');
-    ylabel('f [V]');
+    xlabel('t $[s]$');
+    ylabel('f $[V]$');
     
     % Title.
-    title(ax(1),sprintf('Trial 0/%d',N_trial));
+    title(ax(1),sprintf('Trial Number %d', N_trial));
     
     % Control input.
     ax(2) = subplot(4,1,2);
@@ -29,8 +29,8 @@ if ~exist('PlotInit','var')
     hold on;
     pl_uprev = plot(t,NaN(N,1),'k-');
     pl_u = plot(t,NaN(N,1),'r--');
-    xlabel('t [s]');
-    ylabel('u [V]');
+    xlabel('t $[s]$');
+    ylabel('u $[V]$');
     
     % Error.
     ax(3) = subplot(4,1,3);
@@ -40,15 +40,15 @@ if ~exist('PlotInit','var')
 %     sref3 = plot(t,NaN(N,1),'b:','Linewidth',1.5);
 %     aref3 = plot(t,NaN(N,1),'c:','Linewidth',1.5);
     xlim([0,t(end)]);
-    xlabel('t [s]');
-    ylabel('e [m]');
+    xlabel('t $[s]$');
+    ylabel('e $[m]$');
     
     % Error norm.
     ax(4) = subplot(4,1,4);
     pl_eNorm = plot(0:N_trial-1,NaN(1,N_trial),'r--x');
     set(ax(4),'XTick',0:N_trial-1);
-    xlabel('Trial #');
-    ylabel('||e||_2 [m^2]');
+    xlabel('Trial \#');
+    ylabel('$\|e\|_2 [m^2]$');
     if N_trial > 1
         xlim([0,N_trial-1]);
     end

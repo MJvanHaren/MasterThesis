@@ -1,7 +1,7 @@
 close all; 
 clear all; 
 clc;
-%%
+%% style and paths
 addpath(genpath('C:\Users\maxva\Google Drive\Documenten\TuE\Master\Thesis\MasterThesis'));    % for auxilary functions (GP/plot style etc.)
 SetPlotLatexStyle();
 [c1, c2, c3, c4, c5,c6,c7] = MatlabDefaultPlotColors();
@@ -92,31 +92,33 @@ end
 figure
 for i = 1:N
     p1 = plot(X(indices(i)),history(i,:).eNorm(1,end),'+','Color',c1,'Markersize',15); hold on;
+    p2 = plot(X(indices(i)),history(i,:).eNorm(1,1),'p','Color',c6,'Markersize',10); 
 end
 for i = 1:length(newIndices)
-    p2 = plot(X(newIndices(i)),historyGP(i,:).eNorm(1,1),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
-    p3 = plot(X(newIndices(i)),historyBF(i,:).eNorm(1,1),'.','Color',c4,'Markersize',30);
-    p4 = plot(X(newIndices(i)),historyBF2(i,:).eNorm(1,1),'^','Color',c5,'MarkerFaceColor',c5,'Markersize',10);
+    p3 = plot(X(newIndices(i)),historyGP(i,:).eNorm(1,1),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
+    p4 = plot(X(newIndices(i)),historyBF(i,:).eNorm(1,1),'.','Color',c4,'Markersize',30);
+    p5 = plot(X(newIndices(i)),historyBF2(i,:).eNorm(1,1),'^','Color',c5,'MarkerFaceColor',c5,'Markersize',10);
 end
 
 
 xlabel('Position x on free-free beam $[m]$');
 ylabel('$\|e\|_2 [m^2]$');
-legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at 0.5m'},'Location','northoutside')
+legend([p1 p2 p3 p4 p5],{'Training data with converged FF parameters','No feedforward','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters converged ILC at 0.5m'},'Location','northoutside')
 %%
 figure
 for i = 1:N
     p1 = plot(X(indices(i)),history(i,:).eInfNorm(1,end),'+','Color',c1,'Markersize',15); hold on;
+    p2 = plot(X(indices(i)),history(i,:).eInfNorm(1,1),'p','Color',c6,'Markersize',10);
 end
 for i = 1:length(newIndices)
-    p2 = plot(X(newIndices(i)),historyGP(i,:).eInfNorm(1,1),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
-    p3 = plot(X(newIndices(i)),historyBF(i,:).eInfNorm(1,1),'.','Color',c4,'Markersize',30);
-    p4 = plot(X(newIndices(i)),historyBF2(i,:).eInfNorm(1,1),'^','Color',c5,'MarkerFaceColor',c5,'Markersize',10);
+    p3 = plot(X(newIndices(i)),historyGP(i,:).eInfNorm(1,1),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
+    p4 = plot(X(newIndices(i)),historyBF(i,:).eInfNorm(1,1),'.','Color',c4,'Markersize',30);
+    p5 = plot(X(newIndices(i)),historyBF2(i,:).eInfNorm(1,1),'^','Color',c5,'MarkerFaceColor',c5,'Markersize',10);
 end
 
 xlabel('Position x on free-free beam $[m]$');
 ylabel('$\|e\|_\infty [m]$');
-legend([p1 p2 p3 p4],{'Training data with converged FF parameters','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters determined using ILC at 0.25m'},'Location','northoutside');
+legend([p1 p2 p3 p4 p5],{'Training data with converged FF parameters','No feedforward','FF parameters from GP','Using FF parameters from nearest neighbour converged ILC','Using FF parameters determined using ILC at 0.25m'},'Location','northoutside');
 %% re-doing ILC with BF at newIndices to see performance of GP
 for i = 1:length(newIndices)
     [newThetaGrid(:,i),~,~] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta);
