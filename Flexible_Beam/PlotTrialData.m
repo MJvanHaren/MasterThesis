@@ -45,7 +45,7 @@ if ~exist('PlotInit','var')
     
     % Error norm.
     ax(4) = subplot(4,1,4);
-    pl_eNorm = plot(0:N_trial-1,NaN(1,N_trial),'r--x');
+    pl_eNorm = semilogy(0:N_trial-1,NaN(1,N_trial),'r--x');
     set(ax(4),'XTick',0:N_trial-1);
     xlabel('Trial \#');
     ylabel('$\|e\|_2 [m^2]$');

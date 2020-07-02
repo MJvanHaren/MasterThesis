@@ -15,8 +15,8 @@ HMMS = 5;                                                                   % [-
 CS=3;                                                                       % [-], shape of beam, 3 means rectangular
 
 Ix = [1 361 721];                                                           % indices on beam for Gy and Gz estimation. 1 means beginning of beam, 721 is the end
-indices = [361 10 110 220 550 660 705];                                     % indices to perform ILC with BF to estimate FF parameters
-newIndices = [60 180 375 580 690];                                          % indices to perform GP/nearest neighbour on 
+indices = [361 10 110 220 550 660 720];                                     % indices to perform ILC with BF to estimate FF parameters
+newIndices = [60 165 455 605 690];                                          % indices to perform GP/nearest neighbour on 
 N = length(indices);
 
 noPriors = 200;                                                             % number of priors for GP regression
@@ -62,6 +62,9 @@ options.Xlim = [8e-1 8e2];
 for i = 1:length(Ix)
     x(i) = X(Ix(i));
     G{i} = 0;
+%     for r = 1:2
+%         G{i} = G{i}+(W(r,Ix(i))*P(r))/s^2;
+%     end
     for r = 1:R
         G{i} = G{i}+(W(r,Ix(i))*P(r))/(s^2+omegaList(r)^2+2*zeta(r)*s);
     end
@@ -70,23 +73,23 @@ Gz = G{2};
 Gy = 0.5*(G{1}+G{end});
 %% ILC
 for i = 1:N
-    [theta_grid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta);
+    [thetaGrid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta);
     close gcf;
 end
 %% GP
 close all;
-[mu, xprior,~,hyperParameters,betaBar] = GPRegressionFlexibleBeam(noPriors,m,N,X(indices),theta_grid,h,series,indx);
+[mu, xprior,~,hyperParameters,betaBar] = GPRegressionFlexibleBeam(noPriors,m,N,X(indices),thetaGrid,h,series,indx);
 %% resampling with  GP and others
 newTheta = zeros(m,length(newIndices));
 GPTheta = zeros(m,length(newIndices));
 for j = 1:m
-    GPTheta(j,:) = GPEstimate(X(newIndices),X(indices),hyperParameters(:,j),betaBar(:,j),h,theta_grid(j,:));
+    GPTheta(j,:) = GPEstimate(X(newIndices),X(indices),hyperParameters(:,j),betaBar(:,j),h,thetaGrid(j,:));
 end
 for i = 1:length(newIndices)
     [newTheta(:,i),~,historyGP(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta,GPTheta(:,i)');
     [~,index] = min(abs(indices-newIndices(i)));
-    [~,~,historyBF(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta,theta_grid(:,index)');
-    [~,~,historyBF2(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta,theta_grid(:,1)');
+    [~,~,historyBF(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta,thetaGrid(:,index)');
+    [~,~,historyBF2(i,:)] = FlexibleBeamILCBF(newIndices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta,thetaGrid(:,1)');
 end
 %%
 figure
@@ -126,16 +129,12 @@ end
 %% plotting
 figure
 for i =1:m
-    subplot(floor(sqrt(m)),ceil(sqrt(m)),i)
-    plot(X(newIndices),newThetaGrid(i,:),'+','Color',c1,'Markersize',15); hold on;
+    subplot(floor(sqrt(m)),ceil(sqrt(m)),i);
+    plot(X(indices),thetaGrid(i,:),'+','Color',c7,'Markersize',15); hold on;
+    plot(X(newIndices),newThetaGrid(i,:),'^','Color',c1,'MarkerFaceColor',c1,'Markersize',10);
     plot(X(newIndices),GPTheta(i,:),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
-    for ii = 1:length(newIndices)
-        [~,index] = min(abs(indices-newIndices(ii)));
-        nearestNeighbour(:,ii) = theta_grid(:,index);
-    end
-    plot(X(newIndices),nearestNeighbour(i,:),'.','Color',c4,'Markersize',30);
-    
+
     xlabel('Position on free-free beam $[m]$');
     ylabel('Feedforward parameter [var]');
 end
-legend('True feedforward parameters determined using ILC','Estimated FF parameters with GP','Estimated FF parameters using nearest neighbour');
+legend('Training data (FF parameters from ILC)','True feedforward parameters determined using ILC','Estimated FF parameters with GP');

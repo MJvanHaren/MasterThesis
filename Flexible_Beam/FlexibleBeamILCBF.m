@@ -29,7 +29,7 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
 %     figure(1)
 %     bode(G);
     
-    load('GyGzcontrollerBad.mat');     % load controller synth. from shapeit
+    load('GyGzcontrollerWorse.mat');     % load controller synth. from shapeit
     C = shapeit_data.C_tf;
     CDT = shapeit_data.C_tf_z;
     Ts = shapeit_data.C_tf_z.Ts;
@@ -37,7 +37,8 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     Gss = c2d(ss(G),Ts);
     PS = feedback(Gss,CDT);                 % for simulating signals
     %% trajectory
-    [ttraj, ddx]  = make4(0.5e-3,10,200,1000,15000,Ts);
+%     [ttraj, ddx]  = make4(0.5e-3,2.5e-3,5e-2,1,50,Ts); % 1/3 acc, 1/3 constant velocity, 1/3 deacc
+    [ttraj, ddx]  = make4(0.5e-3,1,20,100,1500,Ts); 
     [~,tx,d,j,a,v,p,~]=profile4(ttraj,ddx(1),Ts);
 
     
@@ -55,24 +56,24 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
         figure
         subplot(1,5,1)
         plot(tx,p)
-        xlabel('Time [s]')
-        ylabel('Position [m]')
+        xlabel('Time $[s]$')
+        ylabel('Position $[m]$')
         subplot(1,5,2)
         plot(tx,v)
-        xlabel('Time [s]')
-        ylabel('Velocity [m/s]')
+        xlabel('Time $[s]$')
+        ylabel('Velocity $[\frac{m}{s}]$')
         subplot(1,5,3)
         plot(tx,a)
-        xlabel('Time [s]')
-        ylabel('Acceleration [m/s^2]')
+        xlabel('Time $[s]$')
+        ylabel('Acceleration $[\frac{m}{s^2}]$')
         subplot(1,5,4)
         plot(tx,j)
-        xlabel('Time [s]')
-        ylabel('Jerk [m/s^3]')
+        xlabel('Time $[s]$')
+        ylabel('Jerk $[\frac{m}{s^3}]$')
         subplot(1,5,5)
         plot(tx,d)
-        xlabel('Time [s]')
-        ylabel('Snap [m/s^4]')
+        xlabel('Time $[s]$')
+        ylabel('Snap $[\frac{m}{s^4}]$')
    end
     %%  ILC BF
     we = eye(N)*1e6; %% I_N
