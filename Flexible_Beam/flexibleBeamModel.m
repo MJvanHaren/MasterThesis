@@ -62,10 +62,10 @@ options.Xlim = [8e-1 8e2];
 for i = 1:length(Ix)
     x(i) = X(Ix(i));
     G{i} = 0;
-%     for r = 1:2
-%         G{i} = G{i}+(W(r,Ix(i))*P(r))/s^2;
-%     end
-    for r = 1:R
+    for r = 1:2
+        G{i} = G{i}+(W(r,Ix(i))*P(r))/s^2;
+    end
+    for r = 3:R
         G{i} = G{i}+(W(r,Ix(i))*P(r))/(s^2+omegaList(r)^2+2*zeta(r)*s);
     end
 end
@@ -73,7 +73,7 @@ Gz = G{2};
 Gy = 0.5*(G{1}+G{end});
 %% ILC
 for i = 1:N
-    [thetaGrid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,0,W,P,omegaList,zeta);
+    [thetaGrid(:,i),Gu,history(i,:)] = FlexibleBeamILCBF(indices(i),toeplitzc,indx,N_trials_ILC,1,W,P,omegaList,zeta);
     close gcf;
 end
 %% GP
