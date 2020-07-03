@@ -1,11 +1,11 @@
 close all; clear all;
-
+rng('default');
 trueF = @(x) sin(0.9*x);
 % trueF = @(x) sin(x)-cos(x);
-
-n =500;                                     % number of test points
+set(groot, 'DefaultFigureRenderer', 'painters');
+n =150;                                     % number of test points
 N = 10;                                     % number of training points
-s = 0.005;                                % noise variance on data
+s = 0.00;                                % noise variance on data
 p = 15;
 lengthP =1;
 
@@ -32,7 +32,7 @@ Lk = L \ k_s;
 Lkp = Lp \ k_sp;
 
 mu = (Lk') * (L \ y);
-mup = (Lkp') * (Lp \ y);
+mu = (Lkp') * (Lp \ y);
 
 % SD
 k_ss = GPSEKernel(Xtest,Xtest,lengthP);   % kernel at test points
@@ -44,31 +44,30 @@ stdv2 = sqrt(s2p);
 
 %% mu, true function, samples and stdv plot
 figure(1);clf;
-plot(X,y,'+','MarkerSize',15); hold on;
-plot(Xtest,trueF(Xtest),'LineWidth',1.3);
-plot(Xtest,mu,'--','LineWidth',1.3);
-plot(Xtest,mu-3*stdv','black');
-plot(Xtest,mu+3*stdv','black');
 inBetween = [(mu+3*stdv')' fliplr((mu-3*stdv')')];
 x2 = [Xtest', fliplr(Xtest')];
-hue = fill(x2,inBetween, [7 7 7]/8,'LineStyle','none');
+hue = fill(x2,inBetween, [7 7 7]/8); hold on;
 alpha(0.3);
+sam = plot(X,y,'+','MarkerSize',15,'Color',[0, 0.4470, 0.7410]); hold on;
+true = plot(Xtest,trueF(Xtest),'LineWidth',1.3,'Color',	[0.8500, 0.3250, 0.0980]);
+mup = plot(Xtest,mu,'--','LineWidth',1.3,'Color',[0.9290, 0.6940, 0.1250]);
+
+
 xlabel('input, x','interpreter','Latex');
 ylabel('output, f(x)','interpreter','Latex');
-legend('Generated samples','True function','Mu of fitted posterior function','$\mu \pm 3 \sigma$','interpreter','Latex')
+legend([sam, true, mup, hue],{'Generated samples','True function','$\mu$ of fitted posterior function','$\mu \pm 3 \sigma$'},'interpreter','Latex')
+
 figure(2)
-plot(X,y,'+','MarkerSize',15); hold on;
-plot(Xtest,trueF(Xtest),'LineWidth',1.3);
-plot(Xtest,mup,'LineWidth',1.3);
-plot(Xtest,mup-3*stdv2','black');
-plot(Xtest,mup+3*stdv2','black');
-inBetween = [(mup+3*stdv2')' fliplr((mup-3*stdv2')')];
+inBetween = [(mu+3*stdv2')' fliplr((mu-3*stdv2')')];
 x2 = [Xtest', fliplr(Xtest')];
-hue = fill(x2,inBetween, [7 7 7]/8,'LineStyle','none');
+hue = fill(x2,inBetween, [7 7 7]/8); hold on;
 alpha(0.3);
+sam=plot(X,y,'+','MarkerSize',15,'Color',[0, 0.4470, 0.7410]); hold on;
+true=plot(Xtest,trueF(Xtest),'LineWidth',1.3,'Color',	[0.8500, 0.3250, 0.0980]);
+mup=plot(Xtest,mu,'LineWidth',1.3,'Color',[0.9290, 0.6940, 0.1250]);
 xlabel('input, x','interpreter','Latex');
 ylabel('output, f(x)','interpreter','Latex');
-legend('Generated samples','True function','Mu of fitted posterior function','$\mu \pm 3 \sigma$','interpreter','Latex')
+legend([sam, true, mup, hue],{'Generated samples','True function','$\mu$ of fitted posterior function','$\mu \pm 3 \sigma$'},'interpreter','Latex')
 
 %% Prior calcs and plots
 Lss_prior = chol(k_ss+1e-9*eye(n),'lower');
