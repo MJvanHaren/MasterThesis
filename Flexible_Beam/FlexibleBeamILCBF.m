@@ -24,14 +24,14 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     G = 0;
     nR = length(omegaList);
     
-    for r = 1:2
-        G = G+(W(r,Ix)*P(r))/s^2;
-    end
-    for r = 3:nR
+%     for r = 1:2
+%         G = G+(W(r,Ix)*P(r))/s^2;
+%     end
+    for r = 1:nR
         G = G+(W(r,Ix)*P(r))/(s^2+omegaList(r)^2+2*zeta(r)*s);
     end
     
-    load('Gzcontroller5Hz.mat');     % load controller synth. from shapeit
+    load('Gzcontroller8HzNoRigidBodyModes.mat');     % load controller synth. from shapeit
     C = shapeit_data.C_tf;
     CDT = shapeit_data.C_tf_z;
     Ts = shapeit_data.C_tf_z.Ts;
@@ -39,7 +39,8 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     Gss = c2d(ss(G),Ts);
     PS = feedback(Gss,CDT);                 % for simulating signals
     %% trajectory
-    [ttraj, ddx]  = make4(0.5e-3,2.5e-3,5e-2,1,50,Ts); % 1/3 acc, 1/3 constant velocity, 1/3 deacc
+%     [ttraj, ddx]  = make4(0.5e-3,2.5e-3,5e-2,1,50,Ts); % 1/3 acc, 1/3 constant velocity, 1/3 deacc (Grassens approximate)
+    [ttraj, ddx]  = make4(1.5e-4,7e-4,0.015,0.75,500,Ts); % 1/3 acc, 1/3 constant velocity, 1/3 deacc (Ronde approximate)
     [~,tx,d,j,a,v,p,~]=profile4(ttraj,ddx(1),Ts);
 
     

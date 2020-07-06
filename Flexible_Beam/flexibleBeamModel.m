@@ -16,12 +16,12 @@ CS=3;                                                                       % [-
 
 Ix = [1 361 721];                                                           % indices on beam for Gy and Gz estimation. 1 means beginning of beam, 721 is the end
 indices = [361 110 220 550 660 720];                                     % indices to perform ILC with BF to estimate FF parameters
-newIndices = [165 455 605 690];                                          % indices to perform GP/nearest neighbour on 
+newIndices = [50 165 455 605 690];                                          % indices to perform GP/nearest neighbour on 
 N = length(indices);
 
 noPriors = 100;                                                             % number of priors for GP regression
-h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4 x(:).^5];       % basis for mean function, use prior model knowledge for this(!)
-% h = @(x) [ones(length(x(:)),1) x(:) x(:).^2];
+% h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4 x(:).^5];       % basis for mean function, use prior model knowledge for this(!)
+h = @(x) [ones(length(x(:)),1) x(:) x(:).^2];
 series = 1;                                                                 % 1=Do least squares before GP to determine mean function. 0=determine mean function using optimization in parallel with hyper parameter optimization
 
 N_trials_ILC =3;                                                            % amount of trials done in ILC
@@ -46,6 +46,7 @@ m = length(indx); % amount of basises used
 s = tf('s');
 omegaList = [4 10 fn]*2*pi;
 zeta = [5 5 betaN];
+% zeta = [0.2094 0.1404 0.0198 0.0157 0.0040 0.0101 0.0022];
 R = length(omegaList);
 P = 5e3*ones(R,1);
 X = linspace(0,L,size(Xnx,2));
@@ -63,10 +64,10 @@ options.Xlim = [8e-1 8e2];
 for i = 1:length(Ix)
     x(i) = X(Ix(i));
     G{i} = 0;
-    for r = 1:2
-        G{i} = G{i}+(W(r,Ix(i))*P(r))/s^2;
-    end
-    for r = 3:R
+%     for r = 1:2
+%         G{i} = G{i}+(W(r,Ix(i))*P(r))/s^2;
+%     end
+    for r = 1:R
         G{i} = G{i}+(W(r,Ix(i))*P(r))/(s^2+omegaList(r)^2+2*zeta(r)*s);
     end
 end
@@ -130,7 +131,7 @@ end
 %% plotting
 figure
 for i =1:m
-    subplot(floor(sqrt(m)),ceil(sqrt(m)),i);
+    subplot(floor(sqrt(m+1)),ceil(sqrt(m)),i);
     plot(X(indices),thetaGrid(i,:),'+','Color',c7,'Markersize',15); hold on;
     plot(X(newIndices),newThetaGrid(i,:),'^','Color',c1,'MarkerFaceColor',c1,'Markersize',10);
     plot(X(newIndices),GPTheta(i,:),'s','Color',c2,'MarkerFaceColor',c2,'Markersize',10);
