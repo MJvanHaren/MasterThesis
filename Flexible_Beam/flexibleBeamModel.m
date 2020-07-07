@@ -21,7 +21,7 @@ N = length(indices);
 
 noPriors = 100;                                                             % number of priors for GP regression
 % h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4 x(:).^5];       % basis for mean function, use prior model knowledge for this(!)
-h = @(x) [ones(length(x(:)),1) x(:) x(:).^2];
+h = @(x) [ones(length(x(:)),1) x(:) x(:).^2 x(:).^3 x(:).^4];
 series = 1;                                                                 % 1=Do least squares before GP to determine mean function. 0=determine mean function using optimization in parallel with hyper parameter optimization
 
 N_trials_ILC =3;                                                            % amount of trials done in ILC
@@ -46,7 +46,6 @@ m = length(indx); % amount of basises used
 s = tf('s');
 omegaList = [4 10 fn]*2*pi;
 zeta = [5 5 betaN];
-% zeta = [0.2094 0.1404 0.0198 0.0157 0.0040 0.0101 0.0022];
 R = length(omegaList);
 P = 5e3*ones(R,1);
 X = linspace(0,L,size(Xnx,2));
@@ -64,9 +63,6 @@ options.Xlim = [8e-1 8e2];
 for i = 1:length(Ix)
     x(i) = X(Ix(i));
     G{i} = 0;
-%     for r = 1:2
-%         G{i} = G{i}+(W(r,Ix(i))*P(r))/s^2;
-%     end
     for r = 1:R
         G{i} = G{i}+(W(r,Ix(i))*P(r))/(s^2+omegaList(r)^2+2*zeta(r)*s);
     end

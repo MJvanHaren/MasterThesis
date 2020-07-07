@@ -6,3 +6,5 @@
 *.autosave
 
 Flexible_Beam/data.mat
+
+*.iml

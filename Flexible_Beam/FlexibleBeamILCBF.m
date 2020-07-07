@@ -24,9 +24,7 @@ function [theta_jplus1,G,history] = FlexibleBeamILCBF(varargin)
     G = 0;
     nR = length(omegaList);
     
-%     for r = 1:2
-%         G = G+(W(r,Ix)*P(r))/s^2;
-%     end
+
     for r = 1:nR
         G = G+(W(r,Ix)*P(r))/(s^2+omegaList(r)^2+2*zeta(r)*s);
     end
