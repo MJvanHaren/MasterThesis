@@ -1,4 +1,4 @@
-function prob = ProbabilityImprovement(x,xTest,y,hyperParameters)
+function [prob,muTest] = ProbabilityImprovement(x,xTest,y,hyperParameters)
 x = x(:); %xBayesian
 xTest = xTest(:); % xSamples
 %% so-far
