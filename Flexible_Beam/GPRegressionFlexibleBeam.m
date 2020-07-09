@@ -77,13 +77,7 @@ function [mu, xPrior, var,xres,betaBar] = GPRegressionFlexibleBeam(n,m,N,xTraini
                     'OptimalityTolerance',1e-10);
         [xres(:,i),~] = fmincon(@(x) marLikelihood4hyp(xTraining,y,h,x,hyp4),xres0,[],[],[],[],lb,ub,[],options);
 
-        meanfunc = [];
-        covfunc = @covSEiso;                        % Squared Exponental covariance function
-        likfunc = @likGauss;                        % Gaussian likelihood
-        hyp = struct('mean', [], 'cov', log([x0(1) x0(3)]), 'lik', log(x0(2)));
-        hypUpdate = minimize(hyp,@gp, -1000,@infGaussLik, meanfunc, covfunc, likfunc, xTraining', y);
-        [mu2(:,i), var2(:,i)] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, xTraining', y, xPrior');
-        xres2 = exp([hypUpdate.cov(1) hypUpdate.lik hypUpdate.cov(2)]);
+       
         %% evaluation of kernel functions using optimized hyperparameters
         k = GPSEKernel(xTraining',xTraining',xres(1,i));
         k_s = xres(3,i)*GPSEKernel(xTraining',xPrior',xres(1,i));

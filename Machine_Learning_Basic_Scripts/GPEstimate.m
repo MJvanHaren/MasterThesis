@@ -1,4 +1,4 @@
-function [Ys] = GPEstimate(xPost,xPrior,hyperParameters,betaBar,h,y)
+function [mu] = GPEstimate(xPost,xPrior,hyperParameters,betaBar,h,y)
     xPost  = xPost(:); % change from row to vector or vector to vector
     xPrior = xPrior(:);
     y = y(:);
@@ -16,10 +16,10 @@ function [Ys] = GPEstimate(xPost,xPrior,hyperParameters,betaBar,h,y)
     %% L
     L = chol(Ky,'lower');
     Lk = L \ k_s;
-    Lss_post = chol(k_ss-Lk'*Lk,'lower');
+%     Lss_post = chol(k_ss-Lk'*Lk,'lower');
     
     %% post. mu and y
     mu = (Lk') * (L \ y)+R'*betaBar;
-    Ys = mu+Lss_post*xPost;
+%     Ys = mu+Lss_post*xPost;
 end
 
