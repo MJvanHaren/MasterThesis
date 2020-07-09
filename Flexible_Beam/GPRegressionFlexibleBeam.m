@@ -22,9 +22,14 @@ function [mu, xPrior, var,xres,betaBar] = GPRegressionFlexibleBeam(n,m,N,xTraini
 
     for i = 1:m
         y = yTraining(i,:)';
-        x01 = linspace(1e-1,15,nGrids);
-        x02 = logspace(log10(min(abs(y))*1e-6),log10(max(abs(y))*1e-1),nGrids);
-        x03 = logspace(log10(min(abs(y))*1e-3),log10(max(abs(y))*1e3),nGrids);
+        rng('shuffle');
+%         x01 = linspace(1e-1,min(abs(y))/max(abs(y))*25); % linear space
+        x01 = rand(1,nGrids)*((min(abs(y))/max(abs(y)))*25-1e-1)+1e-1; % random search
+%         x02 = logspace(log10(min(abs(y))*1e-6),log10(max(abs(y))*1e-1),nGrids);
+        x02 = rand(1,nGrids)*(max(abs(y))*1e-1-min(abs(y))*1e-6)+min(abs(y))*1e-6;
+%         x03 = logspace(log10(min(abs(y))*1e-3),log10(max(abs(y))*1e3),nGrids);
+        x03 = rand(1,nGrids)*(max(abs(y))*1e3-min(abs(y))*1e-3)+min(abs(y))*1e-3;
+        
         if series == 1 
             x04 = 1;
             hyp4 = 0;
@@ -72,13 +77,7 @@ function [mu, xPrior, var,xres,betaBar] = GPRegressionFlexibleBeam(n,m,N,xTraini
                     'OptimalityTolerance',1e-10);
         [xres(:,i),~] = fmincon(@(x) marLikelihood4hyp(xTraining,y,h,x,hyp4),xres0,[],[],[],[],lb,ub,[],options);
 
-        meanfunc = [];
-        covfunc = @covSEiso;                        % Squared Exponental covariance function
-        likfunc = @likGauss;                        % Gaussian likelihood
-        hyp = struct('mean', [], 'cov', log([x0(1) x0(3)]), 'lik', log(x0(2)));
-        hypUpdate = minimize(hyp,@gp, -1000,@infGaussLik, meanfunc, covfunc, likfunc, xTraining', y);
-        [mu2(:,i), var2(:,i)] = gp(hyp, @infGaussLik, meanfunc, covfunc, likfunc, xTraining', y, xPrior');
-        xres2 = exp([hypUpdate.cov(1) hypUpdate.lik hypUpdate.cov(2)]);
+       
         %% evaluation of kernel functions using optimized hyperparameters
         k = GPSEKernel(xTraining',xTraining',xres(1,i));
         k_s = xres(3,i)*GPSEKernel(xTraining',xPrior',xres(1,i));
@@ -101,14 +100,15 @@ function [mu, xPrior, var,xres,betaBar] = GPRegressionFlexibleBeam(n,m,N,xTraini
         
         % kernel of prediction
         k_ss = xres(3,i)*GPSEKernel(xPrior',xPrior',xres(1,i)) + R'*inv(H*inv(Ky)*H')*R;
-        
+%         k_ss = xres(3,i)*GPSEKernel(xPrior',xPrior',xres(1,i));
         % mu and SD/var
         mu(:,i) = (Lk') * (L \ y)+R'*betaBar(:,i);
+%         mu(:,i) = (Lk') * (L \ y);
         var(:,i) = (diag(k_ss)' - sum(Lk.^2,1))';
 
         %% plotting
         figure(2);
-        subplot(floor(sqrt(m)),ceil(sqrt(m)),(i-1)+1);
+        subplot(floor(sqrt(m+1)),ceil(sqrt(m)),(i-1)+1);
         inBetween = [(mu(:,i)+3*sqrt(var(:,i)))' fliplr((mu(:,i)-3*sqrt(var(:,i)))')];
         x2 = [xPrior, fliplr(xPrior)];
         fill(x2,inBetween, [7 7 7]/8);hold on;
