@@ -11,7 +11,7 @@ function [mu] = GPEstimate(xPost,xPrior,hyperParameters,betaBar,h,y)
     Ky = hyperParameters(3)*k+hyperParameters(2)*eye(N);
     %% posterior
     R = h(xPost)'-H*inv(Ky)*k_s;
-    k_ss = hyperParameters(3)*GPSEKernel(xPost,xPost,hyperParameters(1)) + R'*inv(H*inv(Ky)*H')*R;
+%     k_ss = hyperParameters(3)*GPSEKernel(xPost,xPost,hyperParameters(1)) + R'*inv(H*inv(Ky)*H')*R;
     
     %% L
     L = chol(Ky,'lower');

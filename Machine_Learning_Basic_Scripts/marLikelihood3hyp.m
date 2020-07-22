@@ -5,7 +5,7 @@ function [minlogp,dlogpdtheta] = marLikelihood3hyp(xT,y,unk)
     % unk   = vector of unknown (hyper)parameters (3*1) (L,sigman,sigmaf)
     %% definitions
     N = length(y);
-    xT = reshape(xT, [],1);
+    xT = xT(:);
     %% kernel K
     k = GPSEKernel(xT,xT,unk(1));       % kernel with only length parameter
     Ky = unk(3)^2*k + unk(2)^2*eye(N);  % kernel with added noise hyperparameter
