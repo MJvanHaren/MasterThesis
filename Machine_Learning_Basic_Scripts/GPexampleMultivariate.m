@@ -31,18 +31,26 @@ for i = 1:n
    xtest(1+(i-1)*n:i*n,1) = Xt1(:,i);
    xtest(1+(i-1)*n:i*n,2) = Xt2(:,i);
 end
-
+%% optimization of hyper parameters
+options = optimoptions('fmincon','Display','iter',...
+    'Algorithm','interior-point',...          % interior point does not work correctly with specifyobjectivegradient on
+    'SpecifyObjectiveGradient',false,...
+    'CheckGradients',false,...
+    'StepTolerance',1e-10);
+xres0 = [0.5 0.5 s 1];
+lb = [1e-3 1e-3 1e-6 1e-3];
+ub = [1e3 1e3 1e0 1e3];
+[xres,~] = fmincon(@(ohyp) marLikelihood3Hyp2D(x,y,ohyp),xres0,[],[],[],[],lb,ub,[],options);
 
 %% kernel function to our training data
-hyp= [1;s;1];
-k = GPSEKernel2D(x,x,[hyp(1);hyp(1)]);
-Ky = hyp(3)*k+hyp(2)*eye(N^2);
+k = GPSEKernel2D(x,x,xres(1:2));
+Ky = xres(4)*k+xres(3)*eye(N^2);
 L = chol(Ky,'lower');                                       % cholesky of kernel matrix
 
 
 % cov for the test points
 
-k_s = hyp(3)*GPSEKernel2D(x,xtest,[hyp(1);hyp(1)]);
+k_s = xres(4)*GPSEKernel2D(x,xtest,xres(1:2));
 
 Lk = L \ k_s;
 
@@ -52,7 +60,7 @@ for i = 1:n
 end
 
 % kernel star star
-k_ss = hyp(3)*GPSEKernel2D(xtest,xtest,[hyp(1);hyp(1)]);
+k_ss = xres(4)*GPSEKernel2D(xtest,xtest,xres(1:2));
 figure(1); clf;
 subplot(1,2,1);
 surf(xt1,xt2,MU,'LineStyle','none'); hold on;
@@ -71,3 +79,5 @@ xlabel('x1 direction');
 ylabel('x2 direction');
 zlabel('Estimated function values variance');
 stdv = sqrt(s2);
+
+
