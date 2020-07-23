@@ -1,17 +1,21 @@
 close all; clear all;clc;
 % rng(randperm(100,1),'twister')
 rng('shuffle');
-trueF = @(x,z) 3*sin(0.9*x)+cos(0.5*z);
+% trueF = @(x,z) 3*sin(0.9*x)+cos(0.5*z);
+trueF = @(x,z) 1*x.^2 + 0.5*z.^2;
+% trueF = @(x,z) 1*x.^2 + 0.12*z.^3;
 
+h = @(x,z) [ones(length(x),1) x x.^2 z z.^2 z.^3];
+mf=1;
 
 n = 50;                                     % number of test points
-N = 10;                                     % number of training points (sqrt)
+N = 5;                                     % number of training points (sqrt)
 
-s = 0.005;                                % noise variance on data
+s = 0.5;                                % noise variance on data
 dist = 10;
 % Training data x &  y
-% x1 = sort((rand(N,1)-0.5)*dist);
-% x2 = sort((rand(N,1)-0.5)*dist);
+% x1 = ((rand(N,1)-0.5)*dist);
+% x2 = ((rand(N,1)-0.5)*dist);
 x1 = linspace(-dist/2,dist/2,N);
 x2 = linspace(-dist/2,dist/2,N);
 
@@ -31,16 +35,23 @@ for i = 1:n
    xtest(1+(i-1)*n:i*n,1) = Xt1(:,i);
    xtest(1+(i-1)*n:i*n,2) = Xt2(:,i);
 end
+%% mean function least squares
+H = h(x(:,1),x(:,2))';
+betaBar = inv(H*H')*H*y;
 %% optimization of hyper parameters
 options = optimoptions('fmincon','Display','iter',...
     'Algorithm','interior-point',...          % interior point does not work correctly with specifyobjectivegradient on
     'SpecifyObjectiveGradient',false,...
     'CheckGradients',false,...
     'StepTolerance',1e-10);
-xres0 = [0.5 0.5 s 1];
+xres0 = [0.5 0.5 1e-2 1];
 lb = [1e-3 1e-3 1e-6 1e-3];
 ub = [1e3 1e3 1e0 1e3];
-[xres,~] = fmincon(@(ohyp) marLikelihood3Hyp2D(x,y,ohyp),xres0,[],[],[],[],lb,ub,[],options);
+if mf
+    [xres,~] = fmincon(@(ohyp) marLikelihood3Hyp2DMeanFunc(x,y,ohyp,betaBar,h),xres0,[],[],[],[],lb,ub,[],options);
+else
+    [xres,~] = fmincon(@(ohyp) marLikelihood3Hyp2D(x,y,ohyp),xres0,[],[],[],[],lb,ub,[],options);
+end
 
 %% kernel function to our training data
 k = GPSEKernel2D(x,x,xres(1:2));
@@ -54,13 +65,26 @@ k_s = xres(4)*GPSEKernel2D(x,xtest,xres(1:2));
 
 Lk = L \ k_s;
 
-mu = (Lk') * (L \ y);
+Ht = h(xtest(:,1),xtest(:,2))';
+R = Ht-H*inv(Ky)*k_s;
+
+if mf
+    mu = (Lk') * (L \ y) + R'*betaBar;
+
+else
+    mu = (Lk') * (L \ y);
+end
+
 for i = 1:n
    MU(:,i) = mu(1+(i-1)*n:i*n,1); 
 end
 
 % kernel star star
-k_ss = xres(4)*GPSEKernel2D(xtest,xtest,xres(1:2));
+if mf
+    k_ss = xres(4)*GPSEKernel2D(xtest,xtest,xres(1:2))+ R'*inv(H*inv(Ky)*H')*R;
+else
+    k_ss = xres(4)*GPSEKernel2D(xtest,xtest,xres(1:2));
+end
 figure(1); clf;
 subplot(1,2,1);
 surf(xt1,xt2,MU,'LineStyle','none'); hold on;
