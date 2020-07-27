@@ -13,5 +13,5 @@ function val = GPSEKernel2D(a,b,l)
     %% calcs
     sqdist1 = (repmat(x1,size(x1p'))-repmat(x1p',size(x1))).^2;
     sqdist2 = (repmat(x2,size(x2p'))-repmat(x2p',size(x2))).^2;
-    val = exp(-0.5/l(1)*sqdist1-0.5*l(2)*sqdist2);
+    val = exp(-0.5/l(1)*sqdist1-0.5/l(2)*sqdist2);
 end

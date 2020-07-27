@@ -77,9 +77,9 @@ else
     
     % Feedforward.
     set(pl_fprev_x,'YData',get(pl_f_x,'YData'));
-    set(pl_f_x,'YData',f_j_x);
+    set(pl_f_x,'YData',history.fx(:,trial));
     set(pl_fprev_y,'YData',get(pl_f_y,'YData'));
-    set(pl_f_y,'YData',f_j_y);
+    set(pl_f_y,'YData',history.fy(:,trial));
     
     % Control input.
     set(pl_uprev_x,'YData',get(pl_u_x,'YData'));

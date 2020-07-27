@@ -5,13 +5,13 @@ rng('shuffle');
 trueF = @(x,z) 1*x.^2 + 0.5*z.^2;
 % trueF = @(x,z) 1*x.^2 + 0.12*z.^3;
 
-h = @(x,z) [ones(length(x),1) x x.^2 z z.^2 z.^3];
-mf=1;
+h = @(x,z) [ones(length(x),1) x x.^2 z z.^2];
+mf=0;
 
 n = 50;                                     % number of test points
-N = 5;                                     % number of training points (sqrt)
+N = 4;                                     % number of training points (sqrt)
 
-s = 0.5;                                % noise variance on data
+s = 0.05;                                % noise variance on data
 dist = 10;
 % Training data x &  y
 % x1 = ((rand(N,1)-0.5)*dist);
