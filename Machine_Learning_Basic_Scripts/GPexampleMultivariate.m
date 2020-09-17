@@ -2,9 +2,9 @@ close all; clear all;clc;
 % rng(randperm(100,1),'twister')
 rng('shuffle');
 % trueF = @(x,z) 3*sin(0.9*x)+cos(0.5*z);
-trueF = @(x,z) 1*x.^2 + 0.5*z.^2;
+% trueF = @(x,z) 1*x.^2 + 0.5*z.^2;
 % trueF = @(x,z) 1*x.^2 + 0.12*z.^3;
-
+trueF = @(x,z) 0.1*x.^2 + sin(0.6*z);
 h = @(x,z) [ones(length(x),1) x x.^2 z z.^2];
 mf=0;
 
